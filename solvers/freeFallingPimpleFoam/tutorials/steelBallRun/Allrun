@@ -1,0 +1,20 @@
+#!/bin/sh
+cd "${0%/*}" || exit                                # Run from this directory
+. ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions        # Tutorial run functions
+#------------------------------------------------------------------------------
+# steelBallDrop — freeFallingPimpleFoam tutorial
+#
+# Single-phase (air), 2-D axisymmetric wedge, body-fixed falling frame.
+# No dynamic mesh. The sphere is stationary; the fluid accelerates upward.
+#------------------------------------------------------------------------------
+
+# 1. Build the mesh
+runApplication blockMesh
+
+# 2. Copy initial conditions from the pristine directory
+restore0Dir
+
+# 3. Run the solver
+runApplication $(getApplication)
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,27 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Web:      www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      fallingFrameDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+u0              (0 0 0);
+
+// Constant acceleration of the body.
+// Free-fall under gravity in -y direction: (0 -9.81 0)
+// Horizontal sled at 5 m/s2 in +x: (5 0 0)
+acceleration	(0 -9.81 0);
+
+terminalVelocity	100;
+
+// ************************************************************************* //
