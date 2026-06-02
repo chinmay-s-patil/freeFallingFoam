@@ -110,3 +110,5 @@ image.png
 /**/lnInclude
 
 /**/0
+
+!/visualizations/*.avi
