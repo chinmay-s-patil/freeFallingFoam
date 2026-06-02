@@ -25,15 +25,18 @@ boundaryField
     front           { type empty; }
     back            { type empty; }
 
-    // Pressure outlets: zero gradient lets the far-field pressure float.
     top             { type zeroGradient; }
     bottom          { type zeroGradient; }
-    farWall         { type zeroGradient; }
 
-    // Sphere: zero gradient (pressure BC follows from velocity BC)
+    // At least one pressure outlet must be fixedValue so adjustPhi works
+    farWall
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+
     sphere          { type zeroGradient; }
-	
-	symmetry		{ type symmetry; }
+    symmetry        { type symmetry; }
 }
 
 // ************************************************************************* //

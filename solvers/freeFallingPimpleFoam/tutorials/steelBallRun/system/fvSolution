@@ -52,14 +52,9 @@ PIMPLE
     nOuterCorrectors    2;
     nCorrectors         2;
     nNonOrthogonalCorrectors 1;
-
-    // No mesh motion → correctPhi not needed
     correctPhi          no;
     checkMeshCourantNo  no;
     moveMeshOuterCorrectors no;
-    
-    pRefCell            0;     // <-- add this
-    pRefValue           0;     // <-- add this
 }
 
 relaxationFactors
