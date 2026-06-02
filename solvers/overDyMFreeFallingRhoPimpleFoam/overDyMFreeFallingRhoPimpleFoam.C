@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
     #include "createFvOptions.H"
     #include "createRhoUfIfPresent.H"
     #include "createControls.H"
+    #include "createFallingFrameFields.H"
 
     turbulence->validate();
 
