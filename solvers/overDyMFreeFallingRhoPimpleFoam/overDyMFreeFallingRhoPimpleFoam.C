@@ -25,7 +25,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    overRhoPimpleDyMFoam
+    overDyMFreeFallingRhoPimpleFoam
 
 Group
     grpCompressibleSolvers grpMovingMeshSolvers
@@ -72,7 +72,6 @@ int main(int argc, char *argv[])
     #include "createMRF.H"
     #include "createFvOptions.H"
     #include "createRhoUfIfPresent.H"
-    #include "createControls.H"
     #include "createFallingFrameFields.H"
 
     turbulence->validate();

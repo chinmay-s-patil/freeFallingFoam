@@ -25,7 +25,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    overPimpleDyMFoam
+    overDyMFreeFallingPimpleFoam
 
 Group
     grpIncompressibleSolvers grpMovingMeshSolvers
@@ -33,6 +33,15 @@ Group
 Description
     Transient solver for incompressible flow of Newtonian fluids
     on a moving mesh using the PIMPLE (merged PISO-SIMPLE) algorithm.
+
+    Extended with an overset (Chimera) mesh capability and a non-inertial
+    (accelerating) reference frame to simulate a body falling under constant
+    acceleration without moving the mesh.
+
+    The body is kept fixed; the fluid is driven by an inertial pseudo-force
+      S_U = -a_frame
+    which appears in the momentum equation when working in the body-fixed
+    (accelerating) frame.
 
     Turbulence modelling is generic, i.e. laminar, RAS or LES may be selected.
 
@@ -57,7 +66,8 @@ int main(int argc, char *argv[])
     argList::addNote
     (
         "Transient solver for incompressible, turbulent flow"
-        " on a moving mesh."
+        " on a moving mesh with overset (Chimera) support."
+        " Extended with an accelerating (falling) reference frame."
     );
 
     #include "postProcess.H"
@@ -73,6 +83,12 @@ int main(int argc, char *argv[])
     #include "createMRF.H"
     #include "createFvOptions.H"
     #include "createControls.H"
+
+    // ---------------------------------------------------------------
+    //  Read falling-frame parameters and set up pseudo-force field
+    // ---------------------------------------------------------------
+    #include "createFallingFrameFields.H"
+
     #include "CourantNo.H"
     #include "setInitialDeltaT.H"
 
