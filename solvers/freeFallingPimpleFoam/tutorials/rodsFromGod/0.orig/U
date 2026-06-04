@@ -34,7 +34,7 @@ boundaryField
     farWall			{ type slip; }
 
     // Sphere: no-slip wall (ball is stationary in body-fixed frame)
-    sphere          { type noSlip; }
+    cylinder          { type noSlip; }
 	
 	symmetry		{ type symmetry; }
 }
