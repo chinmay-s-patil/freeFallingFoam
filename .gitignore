@@ -112,3 +112,9 @@ image.png
 /**/0
 
 !/visualizations/*.avi
+
+*.vtk
+
+*.FCStd
+
+*.py
