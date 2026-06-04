@@ -9,35 +9,43 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       dictionary;
-    object      turbulenceProperties;
+    class       volScalarField;
+    object      nut;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-simulationType          LES;
+dimensions      [0 2 -1 0 0 0 0];
 
-LES
+internalField   uniform 0;
+
+boundaryField
 {
-    LESModel            WALE;
-
-    turbulence          on;
-
-    printCoeffs         on;
-
-    delta               vanDriest;
-
-    vanDriestCoeffs
+    // Inlet/outlet: nut calculated from resolved field by WALE
+    top
     {
-        delta           cubeRootVol;
-        cubeRootVolCoeffs
-        {
-            deltaCoeff      2.0;
-        }
+        type            calculated;
+        value           uniform 0;
+    }
+    bottom
+    {
+        type            calculated;
+        value           uniform 0;
     }
 
-    WALECoeffs
+    // Slip far-field: no viscous effects needed
+    farWall
     {
-        Cw              0.325;   // standard WALE constant
+        type            slip;
+    }
+
+    // No-slip cylinder wall
+    // WALE gives zero nut at the wall analytically (no wall function needed)
+    // but nutkWallFunction handles coarser y+ gracefully if your mesh
+    // isn't y+ < 1 everywhere
+    cylinder
+    {
+        type            nutkWallFunction;
+        value           uniform 0;
     }
 }
 
