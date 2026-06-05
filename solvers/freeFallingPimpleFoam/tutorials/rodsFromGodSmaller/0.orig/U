@@ -27,11 +27,15 @@ boundaryField
     // Top and bottom: fluid streams past the stationary ball.
     // fallingFrameInletVelocity reads u0/acceleration from fallingFrameDict
     // and imposes U = -(u0 + a*t) automatically.
-    top             { type zeroGradient;}
-    bottom          { type zeroGradient;}
+    top    { type fallingInletVelocity; value uniform (0 0 0); }
+    bottom { type fallingInletVelocity; value uniform (0 0 0); }
 
     // Side wall: slip (no radial influence at far field)
-    farWall			{ type slip; }
+    farWall
+    {			
+        type pressureInletOutletVelocity;
+        value uniform (0 0 0);
+    }
 
     // Sphere: no-slip wall (ball is stationary in body-fixed frame)
     cylinder          { type noSlip; }

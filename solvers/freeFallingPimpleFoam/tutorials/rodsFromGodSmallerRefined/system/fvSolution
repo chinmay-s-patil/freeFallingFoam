@@ -1,0 +1,87 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p
+    {
+        solver          GAMG;
+        smoother        GaussSeidel;
+        tolerance       1e-6;
+        relTol          0.05;
+    }
+
+    pFinal
+    {
+        $p;
+        relTol          0;
+    }
+
+    U
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-8;
+        relTol          0.1;
+    }
+
+    UFinal
+    {
+        $U;
+        relTol          0;
+    }
+
+    // WALE only needs nut (algebraic — no transport equation to solve)
+    // but OpenFOAM still needs a solver entry for any field it writes
+    nut
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-8;
+        relTol          0.1;
+    }
+}
+
+PIMPLE
+{
+    momentumPredictor   yes;
+
+    // LES typically needs only 1 outer corrector — it's genuinely transient
+    // 2 outer correctors is fine but costly; drop to 1 if runtime is painful
+    nOuterCorrectors    2;
+    nCorrectors         2;
+    nNonOrthogonalCorrectors 1;
+
+    correctPhi          no;
+    checkMeshCourantNo  no;
+    moveMeshOuterCorrectors no;
+}
+
+relaxationFactors
+{
+    // No equation relaxation for LES — it kills temporal accuracy
+    // p relaxation is acceptable and helps stability
+    fields
+    {
+    }
+    equations
+    {
+        UFinal          1.0;
+    }
+}
+
+// ************************************************************************* //
