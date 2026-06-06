@@ -17,6 +17,18 @@ FoamFile
 
 solvers
 {
+    // Density — rhoPimpleFoam solves the continuity equation for rho
+    rho
+    {
+        solver          diagonal;
+    }
+
+    rhoFinal
+    {
+        $rho;
+    }
+
+    // Thermodynamic pressure [Pa]
     p
     {
         solver          GAMG;
@@ -45,8 +57,36 @@ solvers
         relTol          0;
     }
 
+    // Sensible internal energy (or enthalpy) — solved in EEqn.H
+    h
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-8;
+        relTol          0.1;
+    }
+
+    hFinal
+    {
+        $h;
+        relTol          0;
+    }
+
+    e
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-8;
+        relTol          0.1;
+    }
+
+    eFinal
+    {
+        $e;
+        relTol          0;
+    }
+
     // WALE only needs nut (algebraic — no transport equation to solve)
-    // but OpenFOAM still needs a solver entry for any field it writes
     nut
     {
         solver          smoothSolver;
@@ -74,13 +114,14 @@ PIMPLE
 relaxationFactors
 {
     // No equation relaxation for LES — it kills temporal accuracy
-    // p relaxation is acceptable and helps stability
     fields
     {
     }
     equations
     {
         UFinal          1.0;
+        eFinal          1.0;
+        hFinal          1.0;
     }
 }
 

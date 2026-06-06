@@ -1,0 +1,52 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      thermophysicalProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Dry air at standard conditions modelled as a perfect gas with constant
+// transport properties.  Energy variable is sensible internal energy (e),
+// consistent with the hePsiThermo / eConst combination used by
+// freeFallingRhoPimpleFoam (which calls thermo.validate(..., "e")).
+
+thermoType
+{
+    type            hePsiThermo;    // compressible, psi-based thermo
+    mixture         pureMixture;    // single-species
+    transport       const;          // constant mu, Pr
+    thermo          eConst;         // constant Cv, sensible internal energy
+    equationOfState perfectGas;     // p = rho R T
+    specie          specie;
+    energy          sensibleInternalEnergy;
+}
+
+mixture
+{
+    specie
+    {
+        molWeight   28.96;          // dry air [g/mol]
+    }
+
+    thermodynamics
+    {
+        Cv          718;            // specific heat at constant volume [J/(kg·K)]
+        Hf          0;              // heat of formation [J/kg]
+    }
+
+    transport
+    {
+        mu          1.81e-05;       // dynamic viscosity at 20°C [Pa·s]
+        Pr          0.713;          // Prandtl number (dry air at 20°C)
+    }
+}
+
+// ************************************************************************* //

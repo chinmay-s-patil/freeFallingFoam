@@ -9,38 +9,39 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volVectorField;
-    object      U;
+    class       volScalarField;
+    object      p;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Thermodynamic (absolute) pressure [Pa]
+// freeFallingRhoPimpleFoam uses the compressible rhoPimpleFoam formulation.
+// Air at ~20°C, 1 atm → p0 = 101325 Pa
 
-dimensions      [0 1 -1 0 0 0 0];
+dimensions      [1 -1 -2 0 0 0 0];
 
-// Domain starts at rest (body frame, ball stationary, fluid at rest)
-internalField   uniform (0 0 0);
+internalField   uniform 101325;
 
 boundaryField
 {
     front           { type empty; }
     back            { type empty; }
 
-    // Top and bottom: fluid streams past the stationary ball.
-    // fallingFrameInletVelocity reads u0/acceleration from fallingFrameDict
-    // and imposes U = -(u0 + a*t) automatically.
-    top    { type fallingInletVelocity; value uniform (0 0 0); }
-    bottom { type fallingInletVelocity; value uniform (0 0 0); }
+    // Inlet / outlet boundaries: free pressure gradient so that the
+    // compressible flux adjusts naturally.
+    top             { type zeroGradient; }
+    bottom          { type zeroGradient; }
 
-    // Side wall: slip (no radial influence at far field)
+    // Far-field lateral boundary: fixed ambient pressure reference.
     farWall
-    {			
-        type pressureInletOutletVelocity;
-        value uniform (0 0 0);
+    {
+        type            fixedValue;
+        value           uniform 101325;
     }
 
-    // Sphere: no-slip wall (ball is stationary in body-fixed frame)
-    cylinder          { type noSlip; }
-	
-	symmetry		{ type symmetry; }
+    // Cylinder wall: no mass flux → zero gradient on p.
+    cylinder        { type zeroGradient; }
+
+    symmetry        { type symmetry; }
 }
 
 // ************************************************************************* //

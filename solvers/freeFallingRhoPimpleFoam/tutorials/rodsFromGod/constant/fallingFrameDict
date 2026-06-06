@@ -25,6 +25,6 @@ u0              ( 0  0  0 );
 acceleration    ( 0  -9.81  0 );
 
 // Terminal velocity estimate for a 2 cm steel ball in air:
-terminalVelocity    85;
+terminalVelocity    1240;
 
 // ************************************************************************* //

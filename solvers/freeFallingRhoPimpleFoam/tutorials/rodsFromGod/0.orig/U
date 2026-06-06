@@ -16,7 +16,7 @@ FoamFile
 
 dimensions      [0 1 -1 0 0 0 0];
 
-// Domain starts at rest (body frame, ball stationary, fluid at rest)
+// Domain starts at rest (body frame: rods stationary, fluid at rest)
 internalField   uniform (0 0 0);
 
 boundaryField
@@ -24,23 +24,23 @@ boundaryField
     front           { type empty; }
     back            { type empty; }
 
-    // Top and bottom: fluid streams past the stationary ball.
-    // fallingFrameInletVelocity reads u0/acceleration from fallingFrameDict
+    // Top and bottom: fluid streams past the stationary rods.
+    // fallingInletVelocity reads u0/acceleration from fallingFrameDict
     // and imposes U = -(u0 + a*t) automatically.
     top    { type fallingInletVelocity; value uniform (0 0 0); }
     bottom { type fallingInletVelocity; value uniform (0 0 0); }
 
-    // Side wall: slip (no radial influence at far field)
+    // Far-field lateral boundary: pressure-inlet/outlet with zero velocity
     farWall
-    {			
+    {
         type pressureInletOutletVelocity;
         value uniform (0 0 0);
     }
 
-    // Sphere: no-slip wall (ball is stationary in body-fixed frame)
+    // Rods: no-slip wall (stationary in body-fixed frame)
     cylinder          { type noSlip; }
-	
-	symmetry		{ type symmetry; }
+
+    symmetry          { type symmetry; }
 }
 
 // ************************************************************************* //

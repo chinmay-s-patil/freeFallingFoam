@@ -10,32 +10,47 @@ FoamFile
     version     2.0;
     format      ascii;
     class       volScalarField;
-    object      p;
+    object      T;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// Kinematic pressure  p/rho  [m^2/s^2]
-// freeFallingPimpleFoam uses the incompressible pimpleFoam formulation.
+// Temperature [K]
+// Isothermal air at 20°C (293.15 K), 1 atm.
+// No heat transfer modelled — all walls are adiabatic (zeroGradient T).
 
-dimensions      [0 2 -2 0 0 0 0];
+dimensions      [0 0 0 1 0 0 0];
 
-internalField   uniform 0;
+internalField   uniform 293.15;
 
 boundaryField
 {
     front           { type empty; }
     back            { type empty; }
 
-    top             { type zeroGradient; }
-    bottom          { type zeroGradient; }
-
-    // At least one pressure outlet must be fixedValue so adjustPhi works
-    farWall
+    // Inlet / outlet: temperature carried in with the flow.
+    top
     {
-        type            fixedValue;
-        value           uniform 0;
+        type            inletOutlet;
+        inletValue      uniform 293.15;
+        value           uniform 293.15;
+    }
+    bottom
+    {
+        type            inletOutlet;
+        inletValue      uniform 293.15;
+        value           uniform 293.15;
     }
 
+    // Far-field: free temperature exchange.
+    farWall
+    {
+        type            inletOutlet;
+        inletValue      uniform 293.15;
+        value           uniform 293.15;
+    }
+
+    // Adiabatic rod walls (no heat flux).
     cylinder        { type zeroGradient; }
+
     symmetry        { type symmetry; }
 }
 

@@ -40,7 +40,7 @@ timePrecision   6;
 
 runTimeModifiable true;
 
-adjustTimeStep  no;
+adjustTimeStep  yes;
 maxCo           0.5;       // Courant number limit
 
 

@@ -37,7 +37,7 @@ patches
         patches ( "patch_2_.*" );
     }
     {
-        name farwall;
+        name farWall;
         patchInfo
         {
             type wall;
@@ -61,7 +61,7 @@ patches
             type patch;
         }
         constructFrom patches;
-        patches ( "patch_0_0" "patch_0_1" );
+        patches ( "patch_0_0" "patch_0_1" "patch_0_2" );
     }
 );
 
