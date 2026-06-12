@@ -99,6 +99,8 @@ solvers
 PIMPLE
 {
     momentumPredictor   yes;
+    
+    transonic yes;
 
     // LES typically needs only 1 outer corrector — it's genuinely transient
     // 2 outer correctors is fine but costly; drop to 1 if runtime is painful

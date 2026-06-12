@@ -1,0 +1,36 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1   # run from this directory
+
+. "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
+
+# ============================================================
+#  Allwclean — freeFallingFoam
+#
+#  Clean order (reverse of build):
+#    1. Solvers
+#    2. BCs
+# ============================================================
+
+echo "========================================================"
+echo "  Cleaning freeFallingFoam"
+echo "========================================================"
+
+# ---- 1. Solvers --------------------------------------------
+echo ""
+echo "--- Cleaning solvers ---"
+
+wclean "$PWD/solvers/overDyMFreeFallingRhoPimpleFoam/src"
+wclean "$PWD/solvers/overDyMFreeFallingPimpleFoam/src"
+wclean "$PWD/solvers/freeFallingRhoPimpleFoam/src"
+wclean "$PWD/solvers/freeFallingPimpleFoam/src"
+
+# ---- 2. Boundary conditions --------------------------------
+echo ""
+echo "--- Cleaning BCs ---"
+
+wclean "$PWD/BCs/fallingInletVelocity"
+
+echo ""
+echo "========================================================"
+echo "  Clean complete"
+echo "========================================================"

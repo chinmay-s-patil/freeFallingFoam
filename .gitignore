@@ -118,3 +118,7 @@ image.png
 *.FCStd
 
 *.py
+
+log*
+
+*.pvsm

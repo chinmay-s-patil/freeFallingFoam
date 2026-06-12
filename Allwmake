@@ -1,0 +1,35 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1   # run from this directory
+
+. "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
+
+# ============================================================
+#  Allwmake — freeFallingFoam
+#
+#  Build order:
+#    1. BCs  (must come first — solvers link against the BC library)
+#    2. Solvers (incompressible before compressible, non-overset before overset)
+# ============================================================
+
+echo "========================================================"
+echo "  Building freeFallingFoam"
+echo "========================================================"
+
+# ---- 1. Boundary conditions --------------------------------
+echo ""
+echo "--- Building BCs ---"
+wmake "$PWD/BCs/fallingInletVelocity"
+
+# ---- 2. Solvers --------------------------------------------
+echo ""
+echo "--- Building solvers ---"
+
+wmake "$PWD/solvers/freeFallingPimpleFoam/src"
+wmake "$PWD/solvers/freeFallingRhoPimpleFoam/src"
+wmake "$PWD/solvers/overDyMFreeFallingPimpleFoam/src"
+wmake "$PWD/solvers/overDyMFreeFallingRhoPimpleFoam/src"
+
+echo ""
+echo "========================================================"
+echo "  Build complete"
+echo "========================================================"
