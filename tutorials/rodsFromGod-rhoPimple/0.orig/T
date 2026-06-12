@@ -1,0 +1,57 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Temperature [K]
+// Isothermal air at 20°C (293.15 K), 1 atm.
+// No heat transfer modelled — all walls are adiabatic (zeroGradient T).
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform 293.15;
+
+boundaryField
+{
+    front           { type empty; }
+    back            { type empty; }
+
+    // Inlet / outlet: temperature carried in with the flow.
+    top
+    {
+        type            inletOutlet;
+        inletValue      uniform 293.15;
+        value           uniform 293.15;
+    }
+    bottom
+    {
+        type            inletOutlet;
+        inletValue      uniform 293.15;
+        value           uniform 293.15;
+    }
+
+    // Far-field: free temperature exchange.
+    farWall
+    {
+        type            inletOutlet;
+        inletValue      uniform 293.15;
+        value           uniform 293.15;
+    }
+
+    // Adiabatic rod walls (no heat flux).
+    cylinder        { type zeroGradient; }
+
+    symmetry        { type symmetry; }
+}
+
+// ************************************************************************* //

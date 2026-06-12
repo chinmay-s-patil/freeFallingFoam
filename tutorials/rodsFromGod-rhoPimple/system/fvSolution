@@ -1,0 +1,130 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    // Density — rhoPimpleFoam solves the continuity equation for rho
+    rho
+    {
+        solver          diagonal;
+    }
+
+    rhoFinal
+    {
+        $rho;
+    }
+
+    // Thermodynamic pressure [Pa]
+    p
+    {
+        solver          GAMG;
+        smoother        GaussSeidel;
+        tolerance       1e-6;
+        relTol          0.05;
+    }
+
+    pFinal
+    {
+        $p;
+        relTol          0;
+    }
+
+    U
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-8;
+        relTol          0.1;
+    }
+
+    UFinal
+    {
+        $U;
+        relTol          0;
+    }
+
+    // Sensible internal energy (or enthalpy) — solved in EEqn.H
+    h
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-8;
+        relTol          0.1;
+    }
+
+    hFinal
+    {
+        $h;
+        relTol          0;
+    }
+
+    e
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-8;
+        relTol          0.1;
+    }
+
+    eFinal
+    {
+        $e;
+        relTol          0;
+    }
+
+    // WALE only needs nut (algebraic — no transport equation to solve)
+    nut
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-8;
+        relTol          0.1;
+    }
+}
+
+PIMPLE
+{
+    momentumPredictor   yes;
+    
+    transonic yes;
+
+    // LES typically needs only 1 outer corrector — it's genuinely transient
+    // 2 outer correctors is fine but costly; drop to 1 if runtime is painful
+    nOuterCorrectors    2;
+    nCorrectors         2;
+    nNonOrthogonalCorrectors 1;
+
+    correctPhi          no;
+    checkMeshCourantNo  no;
+    moveMeshOuterCorrectors no;
+}
+
+relaxationFactors
+{
+    // No equation relaxation for LES — it kills temporal accuracy
+    fields
+    {
+    }
+    equations
+    {
+        UFinal          1.0;
+        eFinal          1.0;
+        hFinal          1.0;
+    }
+}
+
+// ************************************************************************* //
