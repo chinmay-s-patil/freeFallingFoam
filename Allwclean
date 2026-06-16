@@ -21,6 +21,7 @@ echo "--- Cleaning solvers ---"
 
 wclean "$PWD/solvers/overDyMFreeFallingRhoPimpleFoam/src"
 wclean "$PWD/solvers/overDyMFreeFallingPimpleFoam/src"
+wclean "$PWD/solvers/freeFallingSonicFoam"
 wclean "$PWD/solvers/freeFallingRhoPimpleFoam/src"
 wclean "$PWD/solvers/freeFallingPimpleFoam/src"
 

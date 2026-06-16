@@ -24,21 +24,27 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    sonicFoam
+    freeFallingSonicFoam
 
 Group
-    grpCompressibleSolvers
+    grpCompressibleSolvers grpMovingMeshSolvers
 
 Description
     Transient solver for trans-sonic/supersonic, turbulent flow of a
-    compressible gas.
+    compressible gas, with optional mesh motion and mesh topology changes.
+
+    Includes a falling-frame inertial pseudo-force for simulating objects
+    in free fall.  Reads acceleration and initial velocity from
+    constant/fallingFrameDict.
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
+#include "dynamicFvMesh.H"
 #include "psiThermo.H"
 #include "turbulentFluidThermoModel.H"
 #include "pimpleControl.H"
+#include "CorrectPhi.H"
 #include "fvOptions.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -48,18 +54,23 @@ int main(int argc, char *argv[])
     argList::addNote
     (
         "Transient solver for trans-sonic/supersonic, turbulent flow"
-        " of a compressible gas."
+        " of a compressible gas.\n"
+        "With optional mesh motion, mesh topology changes,"
+        " and falling-frame inertial pseudo-force."
     );
 
     #include "postProcess.H"
 
-    #include "addCheckCaseOptions.H"
     #include "setRootCaseLists.H"
     #include "createTime.H"
-    #include "createMesh.H"
-    #include "createControl.H"
+    #include "createDynamicFvMesh.H"
+    #include "createDyMControls.H"
     #include "createFields.H"
     #include "createFieldRefs.H"
+    #include "createFallingFrameFields.H"
+    #include "createRhoUf.H"
+    #include "compressibleCourantNo.H"
+    #include "setInitialDeltaT.H"
     #include "initContinuityErrs.H"
 
     turbulence->validate();
@@ -68,13 +79,58 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
 
-    while (runTime.loop())
+    while (runTime.run())
     {
-        Info<< "Time = " << runTime.timeName() << nl << endl;
+        #include "readDyMControls.H"
 
-        #include "compressibleCourantNo.H"
+        {
+            // Store divrhoU from the previous mesh so that it can be mapped
+            // and used in correctPhi to ensure the corrected phi has the
+            // same divergence
+            volScalarField divrhoU
+            (
+                "divrhoU",
+                fvc::div(fvc::absolute(phi, rho, U))
+            );
+
+            #include "compressibleCourantNo.H"
+            #include "setDeltaT.H"
+
+            ++runTime;
+
+            Info<< "Time = " << runTime.timeName() << nl << endl;
+
+            // Store momentum to set rhoUf for introduced faces.
+            volVectorField rhoU("rhoU", rho*U);
+
+            // Do any mesh changes
+            mesh.update();
+
+            if (mesh.changing())
+            {
+                MRF.update();
+
+                if (correctPhi)
+                {
+                    // Calculate absolute flux from the mapped surface velocity
+                    phi = mesh.Sf() & rhoUf;
+
+                    #include "correctPhi.H"
+
+                    // Make the fluxes relative to the mesh-motion
+                    fvc::makeRelative(phi, rho, U);
+                }
+            }
+
+            if (checkMeshCourantNo)
+            {
+                #include "meshCourantNo.H"
+            }
+        }
 
         #include "rhoEqn.H"
+        Info<< "rho min/max : " << min(rho).value() << " " << max(rho).value()
+            << endl;
 
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
@@ -93,8 +149,6 @@ int main(int argc, char *argv[])
                 turbulence->correct();
             }
         }
-
-        rho = thermo.rho();
 
         runTime.write();
 

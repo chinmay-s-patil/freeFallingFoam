@@ -26,6 +26,7 @@ echo "--- Building solvers ---"
 
 wmake "$PWD/solvers/freeFallingPimpleFoam/src"
 wmake "$PWD/solvers/freeFallingRhoPimpleFoam/src"
+wmake "$PWD/solvers/freeFallingSonicFoam"
 wmake "$PWD/solvers/overDyMFreeFallingPimpleFoam/src"
 wmake "$PWD/solvers/overDyMFreeFallingRhoPimpleFoam/src"
 

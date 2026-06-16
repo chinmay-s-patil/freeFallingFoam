@@ -122,3 +122,5 @@ image.png
 log*
 
 *.pvsm
+
+*.FCBak

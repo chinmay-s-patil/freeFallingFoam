@@ -8,11 +8,12 @@ surfaceScalarField phid
     "phid",
     fvc::interpolate(psi)
    *(
-        fvc::flux(HbyA)
-      + MRF.zeroFilter(rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho))
+       fvc::flux(HbyA)
+     + rhorAUf*fvc::ddtCorr(rho, U, rhoUf)/fvc::interpolate(rho)
     )
 );
 
+fvc::makeRelative(phid, psi, U);
 MRF.makeRelative(fvc::interpolate(psi), phid);
 
 // Non-orthogonal pressure corrector loop
@@ -42,3 +43,9 @@ U = HbyA - rAU*fvc::grad(p);
 U.correctBoundaryConditions();
 fvOptions.correct(U);
 K = 0.5*magSqr(U);
+
+{
+    rhoUf = fvc::interpolate(rho*U);
+    surfaceVectorField n(mesh.Sf()/mesh.magSf());
+    rhoUf += n*(fvc::absolute(phi, rho, U)/mesh.magSf() - (n & rhoUf));
+}
