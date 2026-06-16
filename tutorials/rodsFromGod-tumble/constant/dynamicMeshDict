@@ -30,6 +30,9 @@ sixDoFRigidBodyMotionCoeffs
 
     // This is the rigid-body centre of mass / rotation reference
     centreOfMass    (0 0 0);
+    
+    rho             rhoInf;
+    rhoInf          1.225;          // kg/m³, air at 20 °C / 1 atm
 
     // Replace with your tungsten density if needed
     // For tungsten: rho ≈ 19300 kg/m3

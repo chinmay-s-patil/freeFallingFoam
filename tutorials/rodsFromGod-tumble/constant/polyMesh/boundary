@@ -46,7 +46,7 @@ FoamFile
     }
     overset
     {
-        type            patch;
+        type            overset;
         nFaces          2177;
         startFace       463401;
     }
