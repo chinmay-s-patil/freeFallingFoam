@@ -61,4 +61,22 @@ snGradSchemes
     default             corrected;
 }
 
+oversetInterpolation
+{
+    method              inverseDistance;
+
+    // Donor search tolerance
+    searchBox           (-30 -20 -30) (30 30 30);  // adjust to your domain bounds
+
+    // How many layers of donor cells to use
+    searchBoxDivisions  ( 4  4  4 );
+}
+
+oversetInterpolationSuppressed
+{
+    grad(p);
+    surfaceIntegrate(phi);
+    surfaceIntegrate(phiHbyA);
+}
+
 // ************************************************************************* //

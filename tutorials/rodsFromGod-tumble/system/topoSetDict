@@ -1,0 +1,48 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+actions
+(
+    // Zone 0: background mesh (the farfield/external domain)
+    {
+        name    background;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (-28 -16 -28) (28 28 28);  // covers your full background domain
+    }
+    {
+        name    background;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     background;
+    }
+
+    // Zone 1: overset mesh (the rod/body region)
+    {
+        name    overset;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        box     (-16 -9 -16) (16 17 16);  // covers your cylinder mesh region
+    }
+    {
+        name    overset;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     overset;
+    }
+);

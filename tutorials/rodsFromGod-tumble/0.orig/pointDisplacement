@@ -50,13 +50,8 @@ boundaryField
     }
     rod
     {
-        type            sixDoFRigidBodyDisplacement;
-        centreOfMass    (0 0 0);
-        mass            32742;
-        momentOfInertia (98962 98962 1473);
-
-        solver          Newmark;
-        value           uniform (0 0 0);
+        type    fixedValue;
+        value   uniform (0 0 0);
     }
     symmetry
     {
