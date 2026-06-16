@@ -43,7 +43,7 @@ boundaryField
     }
 
     // Rods: no-slip wall (stationary in body-fixed frame)
-    rod          { type noSlip; }
+    rod          { type movingWallVelocity; value uniform (0 0 0)}
 
     symmetry          { type symmetry; }
 }

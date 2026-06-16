@@ -63,13 +63,9 @@ snGradSchemes
 
 oversetInterpolation
 {
-    method              inverseDistance;
-
-    // Donor search tolerance
-    searchBox           (-30 -20 -30) (30 30 30);  // adjust to your domain bounds
-
-    // How many layers of donor cells to use
-    searchBoxDivisions  ( 4  4  4 );
+    method          inverseDistance;
+    holeLayers      6;          // ← replace searchBox block
+    useLayer        3;
 }
 
 oversetInterpolationSuppressed

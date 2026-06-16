@@ -15,7 +15,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     freeFallingPimpleFoam;
+application     overDyMFreeFallingRhoPimpleFoam;   // ← was freeFallingPimpleFoam
 
 startFrom       latestTime;
 startTime       0;
@@ -46,6 +46,8 @@ maxCo           0.5;       // Courant number limit
 
 libs
 (
+    overset
+    fvMotionSolvers
     libfallingInletVelocity
 );
 

@@ -50,7 +50,7 @@ boundaryField
     }
     rod
     {
-        type    fixedValue;
+        type    calculated;
         value   uniform (0 0 0);
     }
     symmetry
