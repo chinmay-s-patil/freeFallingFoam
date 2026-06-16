@@ -35,8 +35,7 @@ fvOptions.constrain(UEqn);
 
 if (pimple.momentumPredictor())
 {
-    solve(UEqn == -cellMask*fvc::grad(p));
-
+    solve(UEqn == -fvc::grad(p)*cellMask);
     fvOptions.correct(U);
 }
 

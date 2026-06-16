@@ -1,0 +1,78 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2012                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      dynamicMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dynamicFvMesh       dynamicOversetFvMesh;
+
+motionSolverLibs    (sixDoFRigidBodyMotion);
+
+// If your case later needs several moving parts, you can switch to a
+// top-level "solvers { ... }" block. For one rod, a single solver block is fine.
+
+solver              sixDoFRigidBodyMotion;
+
+sixDoFRigidBodyMotionCoeffs
+{
+    // Patch on the rod surface
+    patches         (rod);
+
+    // This is the rigid-body centre of mass / rotation reference
+    centreOfMass    (0 0 0);
+    
+    rho             rhoInf;
+    rhoInf          1.225;          // kg/m³, air at 20 °C / 1 atm
+
+    // Replace with your tungsten density if needed
+    // For tungsten: rho ≈ 19300 kg/m3
+    // Volume = pi * 0.3^2 * 6 ≈ 1.69646 m3
+    // mass ≈ 32742 kg
+    mass            32742;
+
+    // Rod aligned with z-axis:
+    // Izz = 1/2 m r^2
+    // Ixx = Iyy = 1/12 m (3r^2 + L^2)
+    momentOfInertia (98962 98962 1473);
+
+    report          on;
+    accelerationRelaxation 0.8;
+    
+    innerDistance   1.0;   // cells within this radius move rigidly with the body
+    outerDistance   10.0;  // beyond this radius, displacement is zero (blends between)
+
+
+    solver
+    {
+        type Newmark;
+    }
+
+    // Leave rotation unconstrained if you want tipping.
+    // Do NOT add axis (0 0 1), because that only allows spin about z.
+
+    constraints
+    {
+        fixedPlane
+        {
+            sixDoFRigidBodyMotionConstraint plane;
+            normal (0 0 1);
+        }
+    }
+
+    restraints
+    {
+        // empty on purpose
+    }
+}
+
+// ************************************************************************* //

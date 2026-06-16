@@ -52,8 +52,31 @@ mesh.setFluxRequired(p.name());
     nonInt.insert("cellInterpolationWeight");
 
 }
-// Mask field for zeroing out contributions on hole cells
-#include "createCellMask.H"
+
+Info<< "Creating cellMask field to block out hole cells\n" << endl;
+
+volScalarField cellMask
+(
+    IOobject
+    (
+        "cellMask",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    scalar(1),
+    dimless,
+    fvPatchFieldBase::zeroGradientType()
+);
+
+surfaceScalarField faceMask
+(
+    localMin<scalar>(mesh).interpolate(cellMask)
+);
+
+#include "setCellMask.H"
 
 // Create bool field with interpolated cells
 #include "createInterpolatedCells.H"
