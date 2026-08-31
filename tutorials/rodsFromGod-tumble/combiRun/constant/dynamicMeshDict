@@ -30,6 +30,7 @@ sixDoFRigidBodyMotionCoeffs
 
     // This is the rigid-body centre of mass / rotation reference
     centreOfMass    (0 0 0);
+    orientation     (0.999847 -0.0174524 0 0.0174524 0.999847 0 0 0 1);
     
     rho             rhoInf;
     rhoInf          1.225;          // kg/m³, air at 20 °C / 1 atm
@@ -43,7 +44,7 @@ sixDoFRigidBodyMotionCoeffs
     // Rod aligned with z-axis:
     // Izz = 1/2 m r^2
     // Ixx = Iyy = 1/12 m (3r^2 + L^2)
-    momentOfInertia (98962 98962 1473);
+    momentOfInertia (98962 1473 98962);
 
     report          on;
     accelerationRelaxation 0.8;

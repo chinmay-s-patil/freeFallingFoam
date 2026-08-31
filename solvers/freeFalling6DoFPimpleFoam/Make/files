@@ -1,0 +1,3 @@
+freeFalling6DoFPimpleFoam.C
+
+EXE = $(FOAM_USER_APPBIN)/freeFalling6DoFPimpleFoam

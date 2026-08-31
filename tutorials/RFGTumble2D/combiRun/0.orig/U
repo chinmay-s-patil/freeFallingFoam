@@ -1,0 +1,70 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+// Domain starts at rest (body frame: rods stationary, fluid at rest)
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    frontAndBack    { type empty; }
+    master
+    {
+        type            cyclicAMI;
+        value           uniform (0 0 0);
+    }
+    slave
+    {
+        type            cyclicAMI;
+        value           uniform (0 0 0);
+    }
+
+    // Bottom = INLET: fluid streams upward past the stationary rod.
+    // fallingInletVelocity imposes U = -(u0 + a*t) on inflow faces.
+    bottom
+    {
+        type fallingInletVelocity;
+        value uniform (0 0 0);
+    }
+
+    // Top = OUTLET: flow exits the domain.
+    // inletOutlet gives zero-gradient on outflow; kills recirculation on inflow.
+    top
+    {
+        type            inletOutlet;
+        inletValue      uniform (0 0 0);
+        value           uniform (0 0 0);
+    }
+
+    // Far-field lateral boundary
+    sideWalls
+    {
+        type pressureInletOutletVelocity;
+        value uniform (0 0 0);
+    }
+
+    // Rods: no-slip wall (stationary in body-fixed frame)
+    rod
+    {
+        type movingWallVelocity;
+        value uniform (0 0 0);
+    }
+
+    symmetry          { type symmetry; }
+}
+
+// ************************************************************************* //

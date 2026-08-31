@@ -23,13 +23,13 @@ FoamFile
         type            wall;
         inGroups        1(wall);
         nFaces          1264;
-        startFace       43179;
+        startFace       43134;
     }
     overset
     {
         type            overset;
-        nFaces          2177;
-        startFace       44443;
+        nFaces          2174;
+        startFace       44398;
     }
 )
 

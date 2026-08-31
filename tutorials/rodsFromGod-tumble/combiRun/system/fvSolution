@@ -31,8 +31,8 @@ solvers
     // Thermodynamic pressure [Pa]
     p
     {
-        solver          GAMG;
-        smoother        GaussSeidel;
+        solver          PBiCGStab;
+        preconditioner  DILU;
         tolerance       1e-6;
         relTol          0.05;
     }

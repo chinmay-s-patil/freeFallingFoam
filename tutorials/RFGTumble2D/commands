@@ -1,0 +1,32 @@
+cd /home/lavender/OpenFoamUbu/freeFallingFoam/tutorials/RFGTumble2D/
+cd outerMesh
+./Allmesh
+createPatch -overwrite
+rmproc
+cd ../innerMesh/
+./Allmesh
+createPatch -overwrite
+rmproc
+cd ../
+
+rm -rf combiRun
+mkdir combiRun
+cd combiRun
+cp -r ../outerMesh/* .
+mergeMeshes -overwrite . ../innerMesh/
+cp -r ../case/* .
+
+changeDictionary
+
+# Recreate 0 from 0.orig
+rm -rf 0
+orig
+
+# Create cellZone for inner mesh (used by sixDoFRigidBodyMotion)
+topoSet
+
+checkMesh
+
+decomposePar -force
+pararun freeFalling6DoFPimpleFoam -log
+

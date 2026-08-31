@@ -111,7 +111,37 @@ int main(int argc, char *argv[])
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
+        // --- DECOUPLE PSEUDO-FORCE FROM 6-DOF ---
+        volScalarField pHydro
+        (
+            IOobject
+            (
+                "pHydro",
+                runTime.timeName(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh,
+            dimensionedScalar("zero", p.dimensions(), 0.0)
+        );
+        
+        pHydro.primitiveFieldRef() = - (frameAcc & mesh.C().primitiveField());
+        forAll(pHydro.boundaryField(), patchi)
+        {
+            pHydro.boundaryFieldRef()[patchi] = - (frameAcc & mesh.Cf().boundaryField()[patchi]);
+        }
+        
+        p -= pHydro;
+        p.correctBoundaryConditions();
+        // ----------------------------------------
+
         mesh.update();
+
+        // --- RESTORE PSEUDO-FORCE PRESSURE ---
+        p += pHydro;
+        p.correctBoundaryConditions();
+        // ----------------------------------------
 
         if (mesh.changing())
         {

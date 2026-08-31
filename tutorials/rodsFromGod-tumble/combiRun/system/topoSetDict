@@ -16,36 +16,19 @@ FoamFile
 
 actions
 (
-    // Zone 0: background — all cells reachable from a point in the far field
-    {
-        name    background;
-        type    cellSet;
-        action  new;
-        source  regionToCell;
-        insidePoints ((0 15 0));  // a point clearly in your background domain
-    }
     {
         name    background;
         type    cellZoneSet;
         action  new;
         source  setToCellZone;
-        set     background;
-    }
-
-    // Zone 1: overset — all cells reachable from a point inside the rod mesh
-    {
-        name    overset;
-        type    cellSet;
-        action  new;
-        source  regionToCell;
-        insidePoints ((0 0 0));   // a point clearly inside your rod/cylinder region
+        set     region0;
     }
     {
         name    overset;
         type    cellZoneSet;
         action  new;
         source  setToCellZone;
-        set     overset;
+        set     region1;
     }
 );
 

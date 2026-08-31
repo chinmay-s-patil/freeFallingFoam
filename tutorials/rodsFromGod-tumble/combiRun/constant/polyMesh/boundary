@@ -22,33 +22,33 @@ FoamFile
     {
         type            patch;
         nFaces          2828;
-        startFace       448483;
+        startFace       448438;
     }
     bottom
     {
         type            patch;
         nFaces          2828;
-        startFace       451311;
+        startFace       451266;
     }
     farWall
     {
         type            wall;
         inGroups        1(wall);
         nFaces          8064;
-        startFace       454139;
+        startFace       454094;
     }
     rod
     {
         type            wall;
         inGroups        1(wall);
         nFaces          1264;
-        startFace       462203;
+        startFace       462158;
     }
     overset
     {
         type            overset;
-        nFaces          2177;
-        startFace       463467;
+        nFaces          2174;
+        startFace       463422;
     }
 )
 
