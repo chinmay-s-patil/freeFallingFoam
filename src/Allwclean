@@ -1,0 +1,37 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1   # run from this directory
+
+. "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
+
+# ============================================================
+#  src/Allwclean — freeFallingFoam core components
+#
+#  Clean order (reverse of build):
+#    1. Dynamic solvers
+#    2. Function objects
+#    3. Boundary conditions
+# ============================================================
+
+echo "========================================================"
+echo "  Cleaning freeFallingFoam core src"
+echo "========================================================"
+
+# ---- 1. Dynamic Solvers ------------------------------------
+echo ""
+echo "--- Cleaning dynamic solvers ---"
+wclean "$PWD/solvers/tFFPimpleFoam"
+
+# ---- 2. Function objects -----------------------------------
+echo ""
+echo "--- Cleaning function objects ---"
+wclean "$PWD/functionObjects/fallingMotion"
+
+# ---- 3. Boundary conditions --------------------------------
+echo ""
+echo "--- Cleaning BCs ---"
+wclean "$PWD/BCs/fallingInletVelocity"
+
+echo ""
+echo "========================================================"
+echo "  src clean complete"
+echo "========================================================"

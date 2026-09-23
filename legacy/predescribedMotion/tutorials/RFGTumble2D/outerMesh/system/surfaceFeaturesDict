@@ -1,0 +1,42 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     4.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      surfaceFeatureExtractDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+surfaces
+(
+    "Cut_Geometry.stl"
+    "MeshRefinement002.stl"
+);
+
+includedAngle       150;
+geometricTestOnly   no;
+
+subsetFeatures
+{
+    nonManifoldEdges    yes;
+    openEdges           yes;
+}
+
+trimFeatures
+{
+    minElem         0;
+    minLen          0.0;
+}
+
+writeObj            yes;
+verboseObj          no;
+
+// ************************************************************************* //

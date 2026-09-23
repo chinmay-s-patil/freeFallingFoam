@@ -1,0 +1,40 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+actions
+(
+    // Select all cells inside the AMI cylinder (inner mesh)
+    {
+        name    innerMesh;
+        type    cellSet;
+        action  new;
+        source  cylinderToCell;
+        point1  (0 0 -1);
+        point2  (0 0  1);
+        radius  4.49;       // just inside AMI interface at r=4.5
+    }
+
+    // Convert cellSet to cellZone
+    {
+        name    innerMesh;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        set     innerMesh;
+    }
+);
+
+// ************************************************************************* //

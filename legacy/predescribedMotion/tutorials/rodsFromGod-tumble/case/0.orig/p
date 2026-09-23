@@ -1,0 +1,42 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Thermodynamic (absolute) pressure [Pa]
+// freeFallingRhoPimpleFoam uses the compressible rhoPimpleFoam formulation.
+// Air at ~20°C, 1 atm → p0 = 101325 Pa
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    overset
+    {
+        type            overset;
+        value           uniform 0;
+    }
+    top             { type zeroGradient; }
+    bottom          { type zeroGradient; }
+    farWall
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    rod             { type zeroGradient; }
+}
+
+
+// ************************************************************************* //

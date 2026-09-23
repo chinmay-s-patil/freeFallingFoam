@@ -1,0 +1,30 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      fallingFrameDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Steel ball (r = 0.02 m, rho_steel = 7800 kg/m³) falling from rest in air.
+// In the body-fixed frame the fluid streams upward with increasing speed.
+
+// Initial velocity of the ball at t = 0 (dropped from rest)
+u0              ( 0  0  0 );
+
+// Constant acceleration — free fall under gravity in the -y direction.
+acceleration    ( 0  -9.81  0 );
+
+// Terminal velocity estimate for a 2 cm steel ball in air:
+terminalVelocity    1240;
+
+// ************************************************************************* //

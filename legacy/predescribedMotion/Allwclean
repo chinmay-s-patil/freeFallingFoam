@@ -1,0 +1,24 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1   # run from this directory
+
+. "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
+
+# ============================================================
+#  legacy/predescribedMotion/Allwclean — Clean legacy prescribed motion solvers
+# ============================================================
+
+echo "========================================================"
+echo "  Cleaning legacy prescribed-motion solvers"
+echo "========================================================"
+
+wclean "$PWD/solvers/overDyMFreeFallingRhoPimpleFoam"
+wclean "$PWD/solvers/overDyMFreeFallingPimpleFoam"
+wclean "$PWD/solvers/freeFalling6DoFPimpleFoam"
+wclean "$PWD/solvers/freeFallingSonicFoam"
+wclean "$PWD/solvers/freeFallingRhoPimpleFoam"
+wclean "$PWD/solvers/freeFallingPimpleFoam"
+
+echo ""
+echo "========================================================"
+echo "  Legacy solvers clean complete"
+echo "========================================================"

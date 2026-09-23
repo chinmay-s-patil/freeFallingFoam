@@ -1,0 +1,37 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1   # run from this directory
+
+. "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
+
+# ============================================================
+#  src/Allwmake — freeFallingFoam core components
+#
+#  Build order:
+#    1. Boundary conditions (BCs/fallingInletVelocity)
+#    2. Function objects (functionObjects/fallingMotion)
+#    3. Dynamic solvers (solvers/tFFPimpleFoam)
+# ============================================================
+
+echo "========================================================"
+echo "  Building freeFallingFoam core src"
+echo "========================================================"
+
+# ---- 1. Boundary conditions --------------------------------
+echo ""
+echo "--- Building BCs ---"
+wmake "$PWD/BCs/fallingInletVelocity"
+
+# ---- 2. Function objects -----------------------------------
+echo ""
+echo "--- Building Function Objects ---"
+wmake "$PWD/functionObjects/fallingMotion"
+
+# ---- 3. Dynamic Solvers ------------------------------------
+echo ""
+echo "--- Building dynamic solvers ---"
+wmake "$PWD/solvers/tFFPimpleFoam"
+
+echo ""
+echo "========================================================"
+echo "  src build complete"
+echo "========================================================"

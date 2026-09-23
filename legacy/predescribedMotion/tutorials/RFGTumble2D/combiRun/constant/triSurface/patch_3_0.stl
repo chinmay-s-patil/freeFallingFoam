@@ -1,0 +1,30 @@
+solid patch_3_0
+ facet normal -1.0 0.0 0.0
+  outer loop
+   vertex -9.0 15.0 -0.5
+   vertex -9.0 -9.0 0.5
+   vertex -9.0 15.0 0.5
+  endloop
+ endfacet
+ facet normal -1.0 0.0 0.0
+  outer loop
+   vertex -9.0 15.0 -0.5
+   vertex -9.0 -9.0 -0.5
+   vertex -9.0 -9.0 0.5
+  endloop
+ endfacet
+ facet normal 1.0 0.0 0.0
+  outer loop
+   vertex 9.0 -9.0 -0.5
+   vertex 9.0 15.0 0.5
+   vertex 9.0 -9.0 0.5
+  endloop
+ endfacet
+ facet normal 1.0 0.0 0.0
+  outer loop
+   vertex 9.0 -9.0 -0.5
+   vertex 9.0 15.0 -0.5
+   vertex 9.0 15.0 0.5
+  endloop
+ endfacet
+endsolid patch_3_0

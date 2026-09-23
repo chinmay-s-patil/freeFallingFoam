@@ -1,0 +1,93 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      fallingFrameDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Initial velocity of the body at t = 0 [m/s] (vector)
+u0                  ( 0 0 0 );
+
+// Gravitational acceleration vector [m/s^2] (vector)
+acceleration        ( 0 -9.81 0 );
+
+// Body wall patch name(s) for aerodynamic force integration (wordList)
+patches             ( sphere );
+
+// Mass of the r=2m, depth=1m cylinder in mesh [kg] (scalar)
+// (Volume = pi * r^2 * depth = 12.566 m^3, steel density = 7800 kg/m^3)
+mass                98018;
+
+// Reference atmospheric fluid density [kg/m^3] (scalar)
+rhoInf              1.204;
+
+// Atmospheric density model: "rhoInf" or "altitudeBased" (word)
+densityModel        rhoInf;
+
+// Gravity model: "constant" or "altitudeBased" (word)
+gravityModel        constant;
+
+// Enable ground impact termination check (bool)
+groundInterrupt     off;
+
+// Starting altitude above ground level [m] (scalar)
+initialAltitude     500;
+
+// Ground reference altitude [m] (scalar)
+groundAltitude      0;
+
+// Diagnostic tolerances for natural terminal velocity detection
+terminalVelocityTolerance      1e-3;
+terminalAccelerationTolerance  1e-3;
+// Mean atmospheric flow model: "constant", "powerLaw", or "tabulated"
+meanFlow
+{
+    model               constant;
+    velocity            ( 0 0 0 );
+
+    /* Example powerLaw configuration:
+    model               powerLaw;
+    referenceHeight     10;
+    referenceVelocity   ( 5 0 0 );
+    exponent            0.14;
+    */
+
+    /* Example tabulated configuration:
+    model               tabulated;
+    table
+    (
+        ( 0      ( 2 0 0 ) )
+        ( 100    ( 5 0 0 ) )
+        ( 500    ( 10 0 0 ) )
+    );
+    */
+}
+
+// Print configuration toggles for console output
+print
+{
+    frameVel        on;
+    frameAcc        on;
+    altitude        on;
+    pressureForce   off;
+    viscousForce    off;
+    aeroForce       on;
+    gravityForce    on;
+    netForce        on;
+    meanFlow        on;
+    relativeVel     on;
+}
+
+// ************************************************************************* //
+
+

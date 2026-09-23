@@ -4,33 +4,22 @@ cd "${0%/*}" || exit 1   # run from this directory
 . "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
 
 # ============================================================
-#  Allwmake — freeFallingFoam
-#
-#  Build order:
-#    1. BCs  (must come first — solvers link against the BC library)
-#    2. Solvers (incompressible before compressible, non-overset before overset)
+#  Root Allwmake — freeFallingFoam master build script
 # ============================================================
 
 echo "========================================================"
-echo "  Building freeFallingFoam"
+echo "  Building freeFallingFoam (src & legacy)"
 echo "========================================================"
 
-# ---- 1. Boundary conditions --------------------------------
-echo ""
-echo "--- Building BCs ---"
-wmake "$PWD/BCs/fallingInletVelocity"
+if [ -f "$PWD/src/Allwmake" ]; then
+    "$PWD/src/Allwmake"
+fi
 
-# ---- 2. Solvers --------------------------------------------
-echo ""
-echo "--- Building solvers ---"
-
-wmake "$PWD/solvers/freeFallingPimpleFoam/src"
-wmake "$PWD/solvers/freeFallingRhoPimpleFoam/src"
-wmake "$PWD/solvers/freeFallingSonicFoam"
-wmake "$PWD/solvers/overDyMFreeFallingPimpleFoam/src"
-wmake "$PWD/solvers/overDyMFreeFallingRhoPimpleFoam/src"
+if [ -f "$PWD/legacy/predescribedMotion/Allwmake" ]; then
+    "$PWD/legacy/predescribedMotion/Allwmake"
+fi
 
 echo ""
 echo "========================================================"
-echo "  Build complete"
+echo "  Master build complete"
 echo "========================================================"

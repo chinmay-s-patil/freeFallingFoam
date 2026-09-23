@@ -1,0 +1,43 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alphat;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Turbulent thermal diffusivity [kg/(m·s)]
+// Required by compressible::turbulenceModel (EEqn uses turbulence->alphaEff()).
+// Set to zero initially; the solver updates it each time step.
+
+dimensions      [1 -1 -1 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    front           { type empty; }
+    back            { type empty; }
+
+    top             { type zeroGradient; }
+    bottom          { type zeroGradient; }
+    farWall         { type zeroGradient; }
+
+    // Adiabatic rod walls.
+    cylinder
+    {
+        type            compressible::alphatWallFunction;
+        value           uniform 0;
+    }
+
+    symmetry        { type symmetry; }
+}
+
+// ************************************************************************* //

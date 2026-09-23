@@ -1,0 +1,83 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      dynamicMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dynamicFvMesh       dynamicMotionSolverFvMesh;
+
+motionSolverLibs    (sixDoFRigidBodyMotion);
+
+motionSolver        sixDoFRigidBodyMotion;
+
+// Use cellZone to move ONLY inner mesh cells rigidly.
+// This replaces innerDistance/outerDistance which cannot handle
+// an elongated rod inside a circular AMI (distance varies 1.5 to 4.2m).
+patches             (rod);
+cellZone            innerMesh;
+
+// Still need innerDistance/outerDistance for points within the cellZone:
+// set large enough to cover the entire inner mesh (all points are rigid).
+innerDistance       100;
+outerDistance       200;
+
+centreOfMass        (0 0 0);
+orientation         (0.999847 -0.0174524 0 0.0174524 0.999847 0 0 0 1);
+rho                 rhoInf;
+rhoInf              1.225;
+mass                32742;
+momentOfInertia     (98962 1473 98962);
+report              on;
+accelerationRelaxation 0.4;
+
+// With p_rgh formulation, the 6DoF solver sees only aerodynamic pressure.
+// The hydrostatic component is already subtracted. In the falling frame
+// the body is weightless, so g = (0 0 0).
+g                   (0 0 0);
+
+solver
+{
+    type Newmark;
+}
+
+constraints
+{
+    fixedPoint
+    {
+        sixDoFRigidBodyMotionConstraint point;
+        centreOfRotation   (0 0 0);
+    }
+
+    fixedPlane
+    {
+        sixDoFRigidBodyMotionConstraint plane;
+        normal              (0 0 1);
+    }
+
+    fixedAxis
+    {
+        sixDoFRigidBodyMotionConstraint axis;
+        axis                (0 0 1);
+    }
+}
+
+restraints
+{
+    angularDamper
+    {
+        sixDoFRigidBodyMotionRestraint linearDamper;
+        coeff   5000;    // N·m·s/rad — needs tuning
+    }
+}
+
+// ************************************************************************* //

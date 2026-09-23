@@ -4,34 +4,22 @@ cd "${0%/*}" || exit 1   # run from this directory
 . "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
 
 # ============================================================
-#  Allwclean — freeFallingFoam
-#
-#  Clean order (reverse of build):
-#    1. Solvers
-#    2. BCs
+#  Root Allwclean — freeFallingFoam master clean script
 # ============================================================
 
 echo "========================================================"
-echo "  Cleaning freeFallingFoam"
+echo "  Cleaning freeFallingFoam (src & legacy)"
 echo "========================================================"
 
-# ---- 1. Solvers --------------------------------------------
-echo ""
-echo "--- Cleaning solvers ---"
+if [ -f "$PWD/src/Allwclean" ]; then
+    "$PWD/src/Allwclean"
+fi
 
-wclean "$PWD/solvers/overDyMFreeFallingRhoPimpleFoam/src"
-wclean "$PWD/solvers/overDyMFreeFallingPimpleFoam/src"
-wclean "$PWD/solvers/freeFallingSonicFoam"
-wclean "$PWD/solvers/freeFallingRhoPimpleFoam/src"
-wclean "$PWD/solvers/freeFallingPimpleFoam/src"
-
-# ---- 2. Boundary conditions --------------------------------
-echo ""
-echo "--- Cleaning BCs ---"
-
-wclean "$PWD/BCs/fallingInletVelocity"
+if [ -f "$PWD/legacy/predescribedMotion/Allwclean" ]; then
+    "$PWD/legacy/predescribedMotion/Allwclean"
+fi
 
 echo ""
 echo "========================================================"
-echo "  Clean complete"
+echo "  Master clean complete"
 echo "========================================================"

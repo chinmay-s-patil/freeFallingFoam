@@ -1,0 +1,24 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1   # run from this directory
+
+. "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
+
+# ============================================================
+#  legacy/predescribedMotion/Allwmake — Legacy prescribed motion solvers
+# ============================================================
+
+echo "========================================================"
+echo "  Building legacy prescribed-motion solvers"
+echo "========================================================"
+
+wmake "$PWD/solvers/freeFallingPimpleFoam"
+wmake "$PWD/solvers/freeFallingRhoPimpleFoam"
+wmake "$PWD/solvers/freeFallingSonicFoam"
+wmake "$PWD/solvers/freeFalling6DoFPimpleFoam"
+wmake "$PWD/solvers/overDyMFreeFallingPimpleFoam"
+wmake "$PWD/solvers/overDyMFreeFallingRhoPimpleFoam"
+
+echo ""
+echo "========================================================"
+echo "  Legacy solvers build complete"
+echo "========================================================"

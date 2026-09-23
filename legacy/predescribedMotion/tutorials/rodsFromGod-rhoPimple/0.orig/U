@@ -1,0 +1,46 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+// Domain starts at rest (body frame: rods stationary, fluid at rest)
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    front           { type empty; }
+    back            { type empty; }
+
+    // Top and bottom: fluid streams past the stationary rods.
+    // fallingInletVelocity reads u0/acceleration from fallingFrameDict
+    // and imposes U = -(u0 + a*t) automatically.
+    top    { type fallingInletVelocity; value uniform (0 0 0); }
+    bottom { type fallingInletVelocity; value uniform (0 0 0); }
+
+    // Far-field lateral boundary: pressure-inlet/outlet with zero velocity
+    farWall
+    {
+        type pressureInletOutletVelocity;
+        value uniform (0 0 0);
+    }
+
+    // Rods: no-slip wall (stationary in body-fixed frame)
+    cylinder          { type noSlip; }
+
+    symmetry          { type symmetry; }
+}
+
+// ************************************************************************* //
