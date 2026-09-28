@@ -9,24 +9,30 @@ cd "${0%/*}" || exit 1   # run from this directory
 #  Clean order (reverse of build):
 #    1. Dynamic solvers
 #    2. Function objects
-#    3. Boundary conditions
+#    3. Shared models library
+#    4. Boundary conditions
 # ============================================================
 
 echo "========================================================"
 echo "  Cleaning freeFallingFoam core src"
 echo "========================================================"
 
-# ---- 1. Dynamic Solvers ------------------------------------
+echo ""
+echo "--- Cleaning utilities ---"
+wclean "$PWD/utilities/writeFFDict"
+
 echo ""
 echo "--- Cleaning dynamic solvers ---"
 wclean "$PWD/solvers/tFFPimpleFoam"
 
-# ---- 2. Function objects -----------------------------------
 echo ""
 echo "--- Cleaning function objects ---"
 wclean "$PWD/functionObjects/fallingMotion"
 
-# ---- 3. Boundary conditions --------------------------------
+echo ""
+echo "--- Cleaning models ---"
+wclean "$PWD/models"
+
 echo ""
 echo "--- Cleaning BCs ---"
 wclean "$PWD/BCs/fallingInletVelocity"

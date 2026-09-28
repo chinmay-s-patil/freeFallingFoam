@@ -158,7 +158,23 @@ int main(int argc, char *argv[])
         // Reconstruct total pressure p = p_rgh + gh
         p = p_rgh + gh;
 
-        runTime.write();
+        if (triggerTerminalVelocityWrite)
+        {
+            Info<< "[DIAGNOSTIC] Saving fields at terminal velocity state (t = "
+                << runTime.timeName() << " s)" << nl << endl;
+            runTime.writeNow();
+            triggerTerminalVelocityWrite = false;
+
+            if (terminalVelocityStop)
+            {
+                Info<< "[DIAGNOSTIC] Terminal velocity stop condition reached. Ending simulation." << nl << endl;
+                break;
+            }
+        }
+        else
+        {
+            runTime.write();
+        }
 
         runTime.printExecutionTime(Info);
     }

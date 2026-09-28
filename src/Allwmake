@@ -8,8 +8,9 @@ cd "${0%/*}" || exit 1   # run from this directory
 #
 #  Build order:
 #    1. Boundary conditions (BCs/fallingInletVelocity)
-#    2. Function objects (functionObjects/fallingMotion)
-#    3. Dynamic solvers (solvers/tFFPimpleFoam)
+#    2. Shared models library (models -> libfreeFallingModels.so)
+#    3. Function objects (functionObjects/fallingMotion)
+#    4. Dynamic solvers (solvers/tFFPimpleFoam)
 # ============================================================
 
 echo "========================================================"
@@ -21,15 +22,25 @@ echo ""
 echo "--- Building BCs ---"
 wmake "$PWD/BCs/fallingInletVelocity"
 
-# ---- 2. Function objects -----------------------------------
+# ---- 2. Shared Environmental & Physical Models -------------
+echo ""
+echo "--- Building Models (libfreeFallingModels.so) ---"
+wmake "$PWD/models"
+
+# ---- 3. Function objects -----------------------------------
 echo ""
 echo "--- Building Function Objects ---"
 wmake "$PWD/functionObjects/fallingMotion"
 
-# ---- 3. Dynamic Solvers ------------------------------------
+# ---- 4. Dynamic Solvers ------------------------------------
 echo ""
 echo "--- Building dynamic solvers ---"
 wmake "$PWD/solvers/tFFPimpleFoam"
+
+# ---- 5. Utilities ------------------------------------------
+echo ""
+echo "--- Building utilities ---"
+wmake "$PWD/utilities/writeFFDict"
 
 echo ""
 echo "========================================================"

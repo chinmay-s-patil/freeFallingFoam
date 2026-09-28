@@ -1,0 +1,6 @@
+meanFlowModel/meanFlowModel.C
+meanFlowModel/constant/constantMeanFlowModel.C
+meanFlowModel/powerLaw/powerLawMeanFlowModel.C
+meanFlowModel/tabulated/tabulatedMeanFlowModel.C
+
+LIB = $(FOAM_USER_LIBBIN)/libfreeFallingModels

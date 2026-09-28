@@ -7,7 +7,8 @@ EXE_INC = \
     -I$(LIB_SRC)/transportModels \
     -I$(LIB_SRC)/transportModels/incompressible/singlePhaseTransportModel \
     -I$(LIB_SRC)/dynamicMesh/lnInclude \
-    -I$(LIB_SRC)/dynamicFvMesh/lnInclude
+    -I$(LIB_SRC)/dynamicFvMesh/lnInclude \
+    -I../../models/meanFlowModel
 
 EXE_LIBS = \
     -lfiniteVolume \
@@ -18,4 +19,6 @@ EXE_LIBS = \
     -lincompressibleTurbulenceModels \
     -lincompressibleTransportModels \
     -ldynamicMesh \
-    -ldynamicFvMesh
+    -ldynamicFvMesh \
+    -L$(FOAM_USER_LIBBIN) \
+    -lfreeFallingModels

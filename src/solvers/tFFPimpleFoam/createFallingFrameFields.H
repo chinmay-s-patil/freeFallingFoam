@@ -88,6 +88,18 @@ const label terminalVelocitySamples
     fallingFrameDict.getOrDefault<label>("terminalVelocitySamples", 20)
 );
 
+const bool terminalVelocityWrite
+(
+    fallingFrameDict.getOrDefault<bool>("terminalVelocityWrite", true)
+);
+
+const bool terminalVelocityStop
+(
+    fallingFrameDict.getOrDefault<bool>("terminalVelocityStop", false)
+);
+
+bool triggerTerminalVelocityWrite = false;
+
 Info<< "  Falling body properties:" << nl
     << "    u0             = " << u0 << " m/s" << nl
     << "    acceleration   = " << initialAcc << " m/s2" << nl
@@ -100,6 +112,8 @@ Info<< "  Falling body properties:" << nl
     << "    groundInterrupt= " << (groundInterrupt ? "on" : "off") << nl
     << "    initialAltitude= " << initialAltitude << " m" << nl
     << "    groundAltitude = " << groundAltitude << " m" << nl
+    << "    termVelWrite   = " << (terminalVelocityWrite ? "on" : "off") << nl
+    << "    termVelStop    = " << (terminalVelocityStop ? "on" : "off") << nl
     << nl;
 
 // ============================================================

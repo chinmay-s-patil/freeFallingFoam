@@ -29,7 +29,7 @@ patches             ( sphere );
 mass                98018;
 
 // Reference atmospheric fluid density [kg/m^3] (scalar)
-rhoInf              1.204;
+rhoInf              300;
 
 // Atmospheric density model: "rhoInf" or "altitudeBased" (word)
 densityModel        rhoInf;

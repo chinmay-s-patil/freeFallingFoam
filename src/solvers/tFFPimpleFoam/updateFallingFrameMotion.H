@@ -101,7 +101,7 @@ if (fallingFrameDict.found("meanFlow"))
 
         const scalar currentH = max(altitude.value(), minH);
         const scalar ratio = max(currentH / max(zRef, SMALL), SMALL);
-        Umean = Uref * pow(ratio, alpha);
+        Umean = Uref * Foam::pow(ratio, alpha);
     }
     else if (model == "tabulated")
     {
@@ -164,6 +164,8 @@ U.correctBoundaryConditions();
 // ------------------------------------------------------------
 {
     static DynamicList<scalar> velHistory;
+    static bool terminalVelocityTriggered = false;
+
     velHistory.append(mag(frameVelocity.value()));
     if (velHistory.size() > terminalVelocitySamples)
     {
@@ -183,12 +185,22 @@ U.correctBoundaryConditions();
 
         if (mag(frameAcceleration.value()) < terminalAccelerationTolerance && vVar < terminalVelocityTolerance)
         {
-            Info<< "\n[DIAGNOSTIC] Natural terminal velocity detected:" << nl
-                << "    Vt       = " << mag(frameVelocity.value()) << " m/s" << nl
-                << "    altitude = " << altitude.value() << " m" << nl
-                << "    rho      = " << rhoAtmosphere.value() << " kg/m3" << nl
-                << "    Faero    = " << aeroForce.value() << " N" << nl
-                << "    Fnet     = " << netForce.value() << " N" << nl << endl;
+            if (!terminalVelocityTriggered)
+            {
+                terminalVelocityTriggered = true;
+
+                Info<< "\n[DIAGNOSTIC] Natural terminal velocity detected:" << nl
+                    << "    Vt       = " << mag(frameVelocity.value()) << " m/s" << nl
+                    << "    altitude = " << altitude.value() << " m" << nl
+                    << "    rho      = " << rhoAtmosphere.value() << " kg/m3" << nl
+                    << "    Faero    = " << aeroForce.value() << " N" << nl
+                    << "    Fnet     = " << netForce.value() << " N" << nl << endl;
+
+                if (terminalVelocityWrite)
+                {
+                    triggerTerminalVelocityWrite = true;
+                }
+            }
         }
     }
 }
@@ -276,6 +288,6 @@ if (groundInterrupt && altitude.value() <= groundAltitude)
         << "    Altitude: " << altitude.value() << " m (<= groundAltitude " << groundAltitude << " m)" << nl
         << "    Impact velocity: " << mag(frameVelocity.value()) << " m/s" << nl
         << "    Time: " << runTime.timeName() << " s" << nl << endl;
-    runTime.write();
+    runTime.writeNow();
     break;
 }
