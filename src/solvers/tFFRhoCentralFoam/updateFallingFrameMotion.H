@@ -1,16 +1,16 @@
 // ============================================================
-//  updateFallingFrameMotion.H — tFFPimpleFoam
+//  updateFallingFrameMotion.H — tFFRhoCentralFoam
 // ============================================================
 
 #include "OFstream.H"
 
 // ------------------------------------------------------------
-//  1. Aerodynamic force integration from p_rgh and devTau
+//  1. Aerodynamic force integration from static pressure p and devRhoReff
 // ------------------------------------------------------------
 vector fPress = vector::zero;
 vector fVisc = vector::zero;
 
-tmp<volSymmTensorField> tdevTau = turbulence->devReff();
+tmp<volSymmTensorField> tdevTau = turbulence->devRhoReff();
 const volSymmTensorField& devTau = tdevTau();
 
 forAll(patchNames, i)
@@ -18,20 +18,18 @@ forAll(patchNames, i)
     const label patchi = mesh.boundaryMesh().findPatchID(patchNames[i]);
     if (patchi != -1)
     {
-        const fvPatchScalarField& p_rgh_p = p_rgh.boundaryField()[patchi];
+        const fvPatchScalarField& p_p = p.boundaryField()[patchi];
         const fvPatchSymmTensorField& devTau_p = devTau.boundaryField()[patchi];
         const vectorField& Sf = mesh.boundary()[patchi].Sf();
 
-        forAll(p_rgh_p, facei)
+        forAll(p_p, facei)
         {
-            // Pressure force: p_rgh is kinematic [m2/s2] in incompressible solver,
-            // so multiply by rhoAtmosphere [kg/m3] to obtain force [N].
+            // Pressure force: p is static pressure [Pa] in compressible solver.
             // Sf points outwards from fluid domain into body wall.
-            // Fluid pressure pushing on body wall = p_rgh * Sf * rho
-            fPress += p_rgh_p[facei] * Sf[facei] * rhoAtmosphere.value();
+            fPress += p_p[facei] * Sf[facei];
 
-            // Viscous shear force exerted on body wall by fluid = (devTau & Sf) * rho
-            fVisc += (devTau_p[facei] & Sf[facei]) * rhoAtmosphere.value();
+            // Viscous shear force exerted on body wall by fluid = (devTau & Sf)
+            fVisc += (devTau_p[facei] & Sf[facei]);
         }
     }
 }
@@ -142,26 +140,22 @@ meanFlowVelocity.value() = Umean;
 // Update relative freestream velocity field: U_rel = U_mean - V_frame
 relativeVelocity.value() = meanFlowVelocity.value() - frameVelocity.value();
 
-// Update speed of sound and Mach number using density and altitude barometric relation
+// Update speed of sound and Mach number using cell-averaged pressure and density
 {
     const scalar gammaCoeff = 1.4;
-    const scalar rhoVal = max(rhoAtmosphere.value(), SMALL);
-    const scalar pAtm = 101325.0 * (rhoVal / max(rhoRef, SMALL));
-    const scalar a_sound = Foam::sqrt(gammaCoeff * (pAtm / rhoVal));
+    const scalar pMean = max(gAverage(p), 1.0);
+    const scalar rhoMean = max(gAverage(rho), SMALL);
+    const scalar a_sound = Foam::sqrt(gammaCoeff * (pMean / rhoMean));
     speedOfSound.value() = a_sound;
 
     const scalar vRelMag = mag(relativeVelocity.value());
     machNumber.value() = vRelMag / max(a_sound, SMALL);
 }
 
-
-
 // ------------------------------------------------------------
-//  4. Update pseudo-force and hydrostatic head fields
+//  4. Update pseudo-force
 // ------------------------------------------------------------
 fallingFrameForce.value() = -frameAcceleration.value();
-gh = (fallingFrameForce & mesh.C());
-ghf = (fallingFrameForce & mesh.Cf());
 
 // Update boundary conditions with new frame velocity
 U.correctBoundaryConditions();
@@ -206,6 +200,8 @@ U.correctBoundaryConditions();
                     << "    Vt       = " << mag(frameVelocity.value()) << " m/s" << nl
                     << "    altitude = " << altitude.value() << " m" << nl
                     << "    rho      = " << rhoAtmosphere.value() << " kg/m3" << nl
+                    << "    a_sound  = " << speedOfSound.value() << " m/s" << nl
+                    << "    Mach     = " << machNumber.value() << nl
                     << "    Faero    = " << aeroForce.value() << " N" << nl
                     << "    Fnet     = " << netForce.value() << " N" << nl << endl;
 
@@ -214,6 +210,10 @@ U.correctBoundaryConditions();
                     triggerTerminalVelocityWrite = true;
                 }
             }
+        }
+        else
+        {
+            terminalVelocityTriggered = false;
         }
     }
 }
@@ -267,48 +267,56 @@ if (fallingFrameDict.found("print"))
     }
 }
 
-
 // ------------------------------------------------------------
-//  6. Log state to postProcessing/fallingMotion/motion.dat
-// ------------------------------------------------------------
-if (Pstream::master())
-{
-    static autoPtr<OFstream> motionFilePtr;
-    if (!motionFilePtr.valid())
-    {
-        mkDir(runTime.path()/"postProcessing"/"fallingMotion");
-        motionFilePtr.reset
-        (
-            new OFstream
-            (
-                runTime.path()/"postProcessing"/"fallingMotion"/"motion.dat"
-            )
-        );
-        motionFilePtr() << "# Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z Fnet_x Fnet_y Fnet_z" << endl;
-    }
-
-    motionFilePtr() << runTime.timeName() << " "
-                    << altitude.value() << " "
-                    << frameVelocity.value().x() << " " << frameVelocity.value().y() << " " << frameVelocity.value().z() << " "
-                    << frameAcceleration.value().x() << " " << frameAcceleration.value().y() << " " << frameAcceleration.value().z() << " "
-                    << gravity.value().x() << " " << gravity.value().y() << " " << gravity.value().z() << " "
-                    << rhoAtmosphere.value() << " "
-                    << pressureForce.value().x() << " " << pressureForce.value().y() << " " << pressureForce.value().z() << " "
-                    << viscousForce.value().x() << " " << viscousForce.value().y() << " " << viscousForce.value().z() << " "
-                    << aeroForce.value().x() << " " << aeroForce.value().y() << " " << aeroForce.value().z() << " "
-                    << gravityForce.value().x() << " " << gravityForce.value().y() << " " << gravityForce.value().z() << " "
-                    << netForce.value().x() << " " << netForce.value().y() << " " << netForce.value().z() << endl;
-}
-
-// ------------------------------------------------------------
-//  7. Check ground interrupt
+//  6. Ground interrupt check
 // ------------------------------------------------------------
 if (groundInterrupt && altitude.value() <= groundAltitude)
 {
-    Info<< "\n[GROUND INTERRUPT] Ground impact reached!" << nl
-        << "    Altitude: " << altitude.value() << " m (<= groundAltitude " << groundAltitude << " m)" << nl
-        << "    Impact velocity: " << mag(frameVelocity.value()) << " m/s" << nl
-        << "    Time: " << runTime.timeName() << " s" << nl << endl;
+    Info<< "\n[GROUND INTERRUPT] Body reached ground altitude ("
+        << altitude.value() << " <= " << groundAltitude << " m). Terminating simulation." << nl << endl;
     runTime.writeNow();
-    break;
+    runTime.setTime(runTime.endTime().value(), runTime.timeIndex());
+}
+
+// ------------------------------------------------------------
+//  7. Write postProcessing motion data
+// ------------------------------------------------------------
+if (Pstream::master())
+{
+    fileName motionDir = runTime.path()/"postProcessing"/"fallingMotion";
+    mkDir(motionDir);
+
+    static autoPtr<OFstream> motionFilePtr;
+    if (!motionFilePtr.valid())
+    {
+        motionFilePtr.reset(new OFstream(motionDir/"motion.dat"));
+        motionFilePtr() << "# Time(s) Altitude(m) V_frame_x V_frame_y V_frame_z "
+                        << "a_frame_x a_frame_y a_frame_z "
+                        << "F_press_x F_press_y F_press_z "
+                        << "F_visc_x F_visc_y F_visc_z "
+                        << "F_aero_x F_aero_y F_aero_z "
+                        << "F_net_x F_net_y F_net_z" << endl;
+    }
+
+    OFstream& motionFile = motionFilePtr();
+    motionFile << runTime.timeName() << " "
+               << altitude.value() << " "
+               << frameVelocity.value().x() << " "
+               << frameVelocity.value().y() << " "
+               << frameVelocity.value().z() << " "
+               << frameAcceleration.value().x() << " "
+               << frameAcceleration.value().y() << " "
+               << frameAcceleration.value().z() << " "
+               << pressureForce.value().x() << " "
+               << pressureForce.value().y() << " "
+               << pressureForce.value().z() << " "
+               << viscousForce.value().x() << " "
+               << viscousForce.value().y() << " "
+               << viscousForce.value().z() << " "
+               << aeroForce.value().x() << " "
+               << aeroForce.value().y() << " "
+               << aeroForce.value().z() << " "
+               << netForce.value().x() << " "
+               << netForce.value().y() << " "
+               << netForce.value().z() << endl;
 }

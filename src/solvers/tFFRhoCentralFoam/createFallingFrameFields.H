@@ -1,5 +1,5 @@
 // ============================================================
-//  createFallingFrameFields.H — tFFPimpleFoam
+//  createFallingFrameFields.H — tFFRhoCentralFoam
 // ============================================================
 
 #include "uniformDimensionedFields.H"
@@ -118,14 +118,14 @@ Info<< "  Falling body properties:" << nl
 if (fallingFrameDict.found("machRegime"))
 {
     const word machRegime = fallingFrameDict.get<word>("machRegime");
-    Info<< "    machRegime     = " << machRegime << " (inactive for tFFPimpleFoam)" << nl;
+    Info<< "    machRegime     = " << machRegime << " (inactive for tFFRhoCentralFoam)" << nl;
 }
 
 Info<< nl;
 
 
 // ============================================================
-//  Registered Uniform Fields (stored in db() and written to uniform/)
+//  Registered Uniform Fields
 // ============================================================
 
 uniformDimensionedVectorField frameVelocity
@@ -325,7 +325,6 @@ uniformDimensionedScalarField machNumber
 );
 
 
-
 // ============================================================
 //  Spatial Fields
 // ============================================================
@@ -335,18 +334,6 @@ dimensionedVector fallingFrameForce
     "fallingFrameForce",
     dimAcceleration,
     -frameAcceleration.value()
-);
-
-volScalarField gh
-(
-    "gh",
-    (fallingFrameForce & mesh.C())
-);
-
-surfaceScalarField ghf
-(
-    "ghf",
-    (fallingFrameForce & mesh.Cf())
 );
 
 volScalarField magUStar

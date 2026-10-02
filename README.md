@@ -81,12 +81,12 @@ freeFallingFoam/
 
 | Solver | Flow Regime | Mesh / Motion | Key Features |
 | :--- | :--- | :--- | :--- |
-| **`freeFallingPimpleFoam`** | Incompressible | Fixed mesh | PIMPLE algorithm, `-a_frame` body force |
-| **`freeFallingRhoPimpleFoam`** | Compressible | Fixed mesh | Thermophysical energy eq., ideal gas |
-| **`freeFallingSonicFoam`** | Transonic/Supersonic | Fixed mesh | Density/pressure-based sonic solver |
-| **`freeFalling6DoFPimpleFoam`** | Incompressible | 6DoF Motion | `p_rgh` formulation, aerodynamic 6DoF coupling |
-| **`overDyMFreeFallingPimpleFoam`** | Incompressible | Overset Mesh | Overset grid motion with frame acceleration |
-| **`overDyMFreeFallingRhoPimpleFoam`** | Compressible | Overset Mesh | Compressible overset dynamic grid solver |
+| **`tFFPimpleFoam`** | Incompressible | Fixed mesh | True free-falling PIMPLE solver with dynamic fluid-body force coupling |
+| **`tFFRhoPimpleFoam`** | Compressible | Fixed mesh | True free-falling pressure-based compressible solver (PIMPLE) |
+| **`tFFRhoCentralFoam`** | Transonic/Supersonic | Fixed mesh | True free-falling density-based central-upwind solver (Kurganov-Tadmor) |
+| **`freeFallingPimpleFoam`** | Incompressible | Fixed mesh | Prescribed motion PIMPLE solver |
+| **`freeFallingRhoPimpleFoam`** | Compressible | Fixed mesh | Prescribed motion compressible solver |
+| **`freeFallingSonicFoam`** | Transonic/Supersonic | Fixed mesh | Prescribed motion sonic solver |
 
 ---
 

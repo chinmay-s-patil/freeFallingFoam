@@ -36,6 +36,8 @@ wmake "$PWD/functionObjects/fallingMotion"
 echo ""
 echo "--- Building dynamic solvers ---"
 wmake "$PWD/solvers/tFFPimpleFoam"
+wmake "$PWD/solvers/tFFRhoPimpleFoam"
+wmake "$PWD/solvers/tFFRhoCentralFoam"
 
 # ---- 5. Utilities ------------------------------------------
 echo ""

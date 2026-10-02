@@ -1,5 +1,5 @@
 // ============================================================
-//  createFallingFrameFields.H — tFFPimpleFoam
+//  createFallingFrameFields.H — tFFRhoPimpleFoam
 // ============================================================
 
 #include "uniformDimensionedFields.H"
@@ -98,6 +98,22 @@ const bool terminalVelocityStop
     fallingFrameDict.getOrDefault<bool>("terminalVelocityStop", false)
 );
 
+const word machRegime
+(
+    fallingFrameDict.getOrDefault<word>("machRegime", "subsonic")
+);
+
+const scalar machRegimeSwitchCutOff
+(
+    fallingFrameDict.getOrDefault<scalar>("machRegimeSwitchCutOff", 0.7)
+);
+
+const word machRegimeAction
+(
+    fallingFrameDict.getOrDefault<word>("machRegimeAction", "switch")
+);
+
+bool machRegimeSwitched = false;
 bool triggerTerminalVelocityWrite = false;
 
 Info<< "  Falling body properties:" << nl
@@ -113,15 +129,27 @@ Info<< "  Falling body properties:" << nl
     << "    initialAltitude= " << initialAltitude << " m" << nl
     << "    groundAltitude = " << groundAltitude << " m" << nl
     << "    termVelWrite   = " << (terminalVelocityWrite ? "on" : "off") << nl
-    << "    termVelStop    = " << (terminalVelocityStop ? "on" : "off") << nl;
+    << "    termVelStop    = " << (terminalVelocityStop ? "on" : "off") << nl
+    << "    machRegime     = " << machRegime << nl
+    << "    machCutOff     = " << machRegimeSwitchCutOff << nl
+    << "    machAction     = " << machRegimeAction << nl
+    << nl;
 
-if (fallingFrameDict.found("machRegime"))
+if (mesh.solutionDict().found("PIMPLE"))
 {
-    const word machRegime = fallingFrameDict.get<word>("machRegime");
-    Info<< "    machRegime     = " << machRegime << " (inactive for tFFPimpleFoam)" << nl;
+    dictionary& solDict = const_cast<dictionary&>(mesh.solutionDict());
+    dictionary& pimpleDict = solDict.subDict("PIMPLE");
+    if (machRegime == "transonic" || machRegime == "on")
+    {
+        pimpleDict.set("transonic", true);
+        machRegimeSwitched = true;
+    }
+    else if (machRegime == "subsonic" || machRegime == "off" || machRegime == "auto")
+    {
+        pimpleDict.set("transonic", false);
+    }
 }
 
-Info<< nl;
 
 
 // ============================================================
@@ -324,6 +352,20 @@ uniformDimensionedScalarField machNumber
     dimensionedScalar("machNumber", dimless, 0.0)
 );
 
+uniformDimensionedScalarField maxLocalMachNumber
+(
+    IOobject
+    (
+        "maxLocalMachNumber",
+        runTime.timeName(),
+        "uniform",
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    dimensionedScalar("maxLocalMachNumber", dimless, 0.0)
+);
+
 
 
 // ============================================================
@@ -335,18 +377,6 @@ dimensionedVector fallingFrameForce
     "fallingFrameForce",
     dimAcceleration,
     -frameAcceleration.value()
-);
-
-volScalarField gh
-(
-    "gh",
-    (fallingFrameForce & mesh.C())
-);
-
-surfaceScalarField ghf
-(
-    "ghf",
-    (fallingFrameForce & mesh.Cf())
 );
 
 volScalarField magUStar
