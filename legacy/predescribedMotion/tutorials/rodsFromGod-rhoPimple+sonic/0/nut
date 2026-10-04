@@ -1,0 +1,51 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      nut;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -1 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    // Inlet/outlet: nut calculated from resolved field by WALE
+    top
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    bottom
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+
+    // Slip far-field: no viscous effects needed
+    farWall
+    {
+        type            slip;
+    }
+
+    // No-slip cylinder wall.
+    // WALE gives zero nut at the wall analytically; nutkWallFunction
+    // handles coarser y+ gracefully if mesh is not y+ < 1 everywhere.
+    cylinder
+    {
+        type            nutkWallFunction;
+        value           uniform 0;
+    }
+}
+
+// ************************************************************************* //

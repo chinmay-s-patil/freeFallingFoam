@@ -1,0 +1,47 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Thermodynamic (absolute) pressure [Pa]
+// freeFallingRhoPimpleFoam uses the compressible rhoPimpleFoam formulation.
+// Air at ~20°C, 1 atm → p0 = 101325 Pa
+
+dimensions      [1 -1 -2 0 0 0 0];
+
+internalField   uniform 101325;
+
+boundaryField
+{
+    front           { type empty; }
+    back            { type empty; }
+
+    // Inlet / outlet boundaries: free pressure gradient so that the
+    // compressible flux adjusts naturally.
+    top             { type zeroGradient; }
+    bottom          { type zeroGradient; }
+
+    // Far-field lateral boundary: fixed ambient pressure reference.
+    farWall
+    {
+        type            fixedValue;
+        value           uniform 101325;
+    }
+
+    // Cylinder wall: no mass flux → zero gradient on p.
+    cylinder        { type zeroGradient; }
+
+    symmetry        { type symmetry; }
+}
+
+// ************************************************************************* //

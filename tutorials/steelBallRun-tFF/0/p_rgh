@@ -1,0 +1,38 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Hydrostatic-reduced kinematic pressure  p_rgh/rho  [m^2/s^2]
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    front           { type empty; }
+    back            { type empty; }
+
+    top
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    bottom          { type fixedFluxPressure; value uniform 0; }
+    farWall         { type zeroGradient; }
+    sphere          { type fixedFluxPressure; value uniform 0; }
+    symmetry        { type symmetry; }
+}
+
+// ************************************************************************* //

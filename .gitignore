@@ -67,7 +67,7 @@ processor*/
 # ------------------------------------------------------------
 #  Misc OpenFOAM Runtime Files
 # ------------------------------------------------------------
-postProcessing/
+# postProcessing/
 !tutorial/vortexShred/postProcessing/fwhFoam
 logs/
 log.*
@@ -118,7 +118,9 @@ image.png
 
 /**/lnInclude
 
-/**/0
+# /**/0
+
+# /**/__pycache__
 
 !/visualizations/*.avi
 
