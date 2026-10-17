@@ -209,7 +209,12 @@ void fallingInletVelocityFvPatchVectorField::updateCoeffs()
     }
 
     vector Uinlet;
-    if (this->db().foundObject<uniformDimensionedVectorField>("relativeVelocity"))
+    if (overrideParams_)
+    {
+        const scalar t = this->db().time().timeOutputValue();
+        Uinlet = inletVelocity(t);
+    }
+    else if (this->db().foundObject<uniformDimensionedVectorField>("relativeVelocity"))
     {
         const uniformDimensionedVectorField& Vrel =
             this->db().lookupObject<uniformDimensionedVectorField>("relativeVelocity");

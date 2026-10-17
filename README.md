@@ -55,38 +55,38 @@ This isolates pure **aerodynamic forces and moments** for the 6DoF rigid body mo
 freeFallingFoam/
 ├── Allwmake                      # Master compilation script
 ├── Allwclean                     # Master clean script
-├── BCs/                          # Custom boundary conditions
-│   └── fallingInletVelocity/    # Body-fixed accelerating frame BC
-├── solvers/                      # Solver suite
-│   ├── freeFallingPimpleFoam     # Incompressible transient solver
-│   ├── freeFallingRhoPimpleFoam  # Compressible transient solver
-│   ├── freeFallingSonicFoam      # Transonic/supersonic compressible solver
-│   ├── freeFalling6DoFPimpleFoam # 6DoF tumbling solver (p_rgh formulation)
-│   ├── overDyMFreeFallingPimpleFoam    # Incompressible overset dynamic mesh solver
-│   └── overDyMFreeFallingRhoPimpleFoam # Compressible overset dynamic mesh solver
-├── tutorials/                    # Case tutorials
-│   ├── steelBallRun-pimple/      # 2D axisymmetric sphere drop (Working)
-│   ├── rodsFromGod-pimple/       # High-speed rod free fall (Working)
-│   ├── rodsFromGodRefined-pimple/# Mesh-refined rod simulation (Working)
-│   ├── rodsFromGod-rhoPimple/    # Compressible rod drop (Working)
-│   ├── rodsFromGod-rhoPimple+sonic/ # Supersonic transition test (Working)
-│   ├── RFGTumble2D/              # 2D 6DoF tumbling rod (WIP - Under development)
-│   └── rodsFromGod-tumble/       # 3D 6DoF overset tumbling rod (WIP)
-└── visualizations/               # Pre-rendered simulation videos
+├── src/                          # Core solver source code & models
+│   ├── BCs/                      # Custom boundary conditions
+│   │   └── fallingInletVelocity/ # Body-fixed accelerating frame BC
+│   ├── models/                   # Shared atmospheric & wind models (libfreeFallingModels.so)
+│   │   └── meanFlowModel/        # Runtime selection tables (constant, powerLaw, tabulated)
+│   ├── functionObjects/          # Motion tracking & logging function objects
+│   │   └── fallingMotion/        # Console & motion.dat logger
+│   ├── solvers/                  # True free-falling dynamic solvers
+│   │   ├── tFFPimpleFoam         # Incompressible transient solver
+│   │   ├── tFFRhoPimpleFoam      # Pressure-based compressible solver
+│   │   └── tFFRhoCentralFoam     # Density-based central-upwind solver (Kurganov-Tadmor)
+│   └── utilities/                # Dictionary generation utility (writeFFDict)
+├── tutorials/                    # Active freeFallingFoam core tutorials
+│   ├── steelBallRun-tFF/         # Steel ball drop with tFFPimpleFoam & motion tracking
+│   └── steelBallRun-Denser/      # Steel ball drop with dense grid resolution
+├── legacy/                       # Legacy & prescribed-motion solver suite
+│   └── predescribedMotion/       # Prescribed-motion solvers and cases
+└── visualizations/               # Simulation animations & recordings
 ```
 
 ---
 
 ## Solvers Overview
 
-| Solver | Flow Regime | Mesh / Motion | Key Features |
+| Solver | Flow Regime | Frame Motion | Key Features |
 | :--- | :--- | :--- | :--- |
-| **`tFFPimpleFoam`** | Incompressible | Fixed mesh | True free-falling PIMPLE solver with dynamic fluid-body force coupling |
-| **`tFFRhoPimpleFoam`** | Compressible | Fixed mesh | True free-falling pressure-based compressible solver (PIMPLE) |
-| **`tFFRhoCentralFoam`** | Transonic/Supersonic | Fixed mesh | True free-falling density-based central-upwind solver (Kurganov-Tadmor) |
-| **`freeFallingPimpleFoam`** | Incompressible | Fixed mesh | Prescribed motion PIMPLE solver |
-| **`freeFallingRhoPimpleFoam`** | Compressible | Fixed mesh | Prescribed motion compressible solver |
-| **`freeFallingSonicFoam`** | Transonic/Supersonic | Fixed mesh | Prescribed motion sonic solver |
+| **`tFFPimpleFoam`** | Incompressible | Dynamic (Coupled) | True free-falling PIMPLE solver with dynamic fluid-body force coupling |
+| **`tFFRhoPimpleFoam`** | Compressible | Dynamic (Coupled) | True free-falling pressure-based compressible solver with Mach auto-regime switch |
+| **`tFFRhoCentralFoam`** | Transonic/Supersonic | Dynamic (Coupled) | True free-falling density-based central-upwind solver (Kurganov-Tadmor) |
+| **`freeFallingPimpleFoam`** (Legacy) | Incompressible | Prescribed | Prescribed motion PIMPLE solver |
+| **`freeFallingRhoPimpleFoam`** (Legacy) | Compressible | Prescribed | Prescribed motion compressible solver |
+| **`freeFallingSonicFoam`** (Legacy) | Transonic/Supersonic | Prescribed | Prescribed motion sonic solver |
 
 ---
 
@@ -150,28 +150,19 @@ inlet
 
 ## Tutorials & Status
 
-### 1. Steel Ball Drop ([`steelBallRun-pimple`](file:///home/lavender/OpenFoamUbu/freeFallingFoam/tutorials/steelBallRun-pimple))
+### 1. Steel Ball Drop ([`tutorials/steelBallRun-tFF`](file:///home/lavender/OpenFoamUbu/solvers/freeFallingFoam/tutorials/steelBallRun-tFF))
 - **Status**: Working & Verified
 - **Physics**: 2 cm steel sphere falling from rest in air under standard gravity (`g = 9.81 m/s²`).
-- **Features**: Axisymmetric wedge mesh, boundary layer development, drag calculation, and normalized velocity scale `magUStar = mag(U) / mag(U_frame)`.
+- **Features**: Axisymmetric wedge mesh, dynamic force coupling, drag calculation, live motion tracking script (`plot_motion.py`).
 - **Run**:
   ```bash
-  cd tutorials/steelBallRun-pimple
+  cd tutorials/steelBallRun-tFF
   ./Allrun
   ```
 
-### 2. Rods From God ([`rodsFromGod-pimple`](file:///home/lavender/OpenFoamUbu/freeFallingFoam/tutorials/rodsFromGod-pimple) & [`rodsFromGodRefined-pimple`](file:///home/lavender/OpenFoamUbu/freeFallingFoam/tutorials/rodsFromGodRefined-pimple))
-- **Status**: Working & Verified
-- **Physics**: High-aspect-ratio kinetic energy penetrator falling at high velocity.
-- **Features**: Fine wake resolution, shock/drag dynamics, ParaView visualization scripts.
-
-### 3. Compressible Rod Drop ([`rodsFromGod-rhoPimple`](file:///home/lavender/OpenFoamUbu/freeFallingFoam/tutorials/rodsFromGod-rhoPimple) & [`rodsFromGod-rhoPimple+sonic`](file:///home/lavender/OpenFoamUbu/freeFallingFoam/tutorials/rodsFromGod-rhoPimple+sonic))
-- **Status**: Working & Verified
-- **Physics**: Transonic/compressible atmosphere free fall simulation.
-
-### 4. RFGTumble & 6DoF Dynamics ([`RFGTumble2D`](file:///home/lavender/OpenFoamUbu/freeFallingFoam/tutorials/RFGTumble2D) & [`rodsFromGod-tumble`](file:///home/lavender/OpenFoamUbu/freeFallingFoam/tutorials/rodsFromGod-tumble))
-- **Status**: Work in Progress (Not Entirely Ready)
-- **Details**: Tests 6DoF angular pitch oscillation, overset grid interpolation, and aerodynamic damping during free fall. Current development focuses on stabilizing angular velocity, tuning linear/angular dampers, and optimizing overset cellZone coupling.
+### 2. Legacy Prescribed-Motion Tutorials ([`legacy/predescribedMotion/tutorials`](file:///home/lavender/OpenFoamUbu/solvers/freeFallingFoam/legacy/predescribedMotion/tutorials))
+- **Status**: Legacy Prescribed Motion
+- **Cases**: `steelBallRun-pimple`, `rodsFromGod-pimple`, `rodsFromGodRefined-pimple`, `rodsFromGod-rhoPimple`, `rodsFromGod-rhoPimple+sonic`, `RFGTumble2D`, `rodsFromGod-tumble`.
 
 ---
 

@@ -79,60 +79,35 @@ else
 const scalar V_up = -(frameVelocity.value() & gDir);
 altitude.value() += V_up * dt;
 
-// Evaluate mean atmospheric flow U_mean(z)
+// Update atmospheric density and gravity according to altitude models
+if (densityModel == "altitudeBased")
+{
+    const scalar scaleHeight = 8400.0;
+    rhoAtmosphere.value() = rhoRef * std::exp(-max(altitude.value(), 0.0) / scaleHeight);
+}
+else
+{
+    rhoAtmosphere.value() = rhoRef;
+}
+
+if (gravityModel == "altitudeBased")
+{
+    const scalar earthRadius = 6371000.0;
+    const scalar magG0 = max(mag(initialAcc), SMALL);
+    const scalar gMag = magG0 * sqr(earthRadius / (earthRadius + max(altitude.value(), 0.0)));
+    gravity.value() = (initialAcc / magG0) * gMag;
+}
+else
+{
+    gravity.value() = initialAcc;
+}
+
+// Evaluate mean atmospheric flow U_mean(z) via runtime selection table
 vector Umean = vector::zero;
 if (fallingFrameDict.found("meanFlow"))
 {
-    const dictionary& meanFlowDict = fallingFrameDict.subDict("meanFlow");
-    const word model = meanFlowDict.getOrDefault<word>("model", "constant");
-
-    if (model == "constant")
-    {
-        Umean = meanFlowDict.getOrDefault<vector>("velocity", vector::zero);
-    }
-    else if (model == "powerLaw")
-    {
-        const scalar zRef = meanFlowDict.getOrDefault<scalar>("referenceHeight", 10.0);
-        const vector Uref = meanFlowDict.getOrDefault<vector>("referenceVelocity", vector::zero);
-        const scalar alpha = meanFlowDict.getOrDefault<scalar>("exponent", 0.14);
-        const scalar minH  = meanFlowDict.getOrDefault<scalar>("minHeight", 0.1);
-
-        const scalar currentH = max(altitude.value(), minH);
-        const scalar ratio = max(currentH / max(zRef, SMALL), SMALL);
-        Umean = Uref * Foam::pow(ratio, alpha);
-    }
-    else if (model == "tabulated")
-    {
-        List<Tuple2<scalar, vector>> table;
-        if (meanFlowDict.readIfPresent("table", table) && table.size() > 0)
-        {
-            const scalar zCurr = altitude.value();
-            if (zCurr <= table.first().first())
-            {
-                Umean = table.first().second();
-            }
-            else if (zCurr >= table.last().first())
-            {
-                Umean = table.last().second();
-            }
-            else
-            {
-                for (label i = 0; i < table.size() - 1; ++i)
-                {
-                    if (zCurr >= table[i].first() && zCurr <= table[i+1].first())
-                    {
-                        const scalar z0_val = table[i].first();
-                        const scalar z1_val = table[i+1].first();
-                        const vector& u0_val = table[i].second();
-                        const vector& u1_val = table[i+1].second();
-                        const scalar frac = (zCurr - z0_val) / max(z1_val - z0_val, SMALL);
-                        Umean = u0_val + frac * (u1_val - u0_val);
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    autoPtr<meanFlowModel> meanFlowPtr = meanFlowModel::New(fallingFrameDict);
+    Umean = meanFlowPtr->velocity(altitude.value());
 }
 
 meanFlowVelocity.value() = Umean;
@@ -290,33 +265,19 @@ if (Pstream::master())
     if (!motionFilePtr.valid())
     {
         motionFilePtr.reset(new OFstream(motionDir/"motion.dat"));
-        motionFilePtr() << "# Time(s) Altitude(m) V_frame_x V_frame_y V_frame_z "
-                        << "a_frame_x a_frame_y a_frame_z "
-                        << "F_press_x F_press_y F_press_z "
-                        << "F_visc_x F_visc_y F_visc_z "
-                        << "F_aero_x F_aero_y F_aero_z "
-                        << "F_net_x F_net_y F_net_z" << endl;
+        motionFilePtr() << "# Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z Fnet_x Fnet_y Fnet_z" << endl;
     }
 
     OFstream& motionFile = motionFilePtr();
     motionFile << runTime.timeName() << " "
                << altitude.value() << " "
-               << frameVelocity.value().x() << " "
-               << frameVelocity.value().y() << " "
-               << frameVelocity.value().z() << " "
-               << frameAcceleration.value().x() << " "
-               << frameAcceleration.value().y() << " "
-               << frameAcceleration.value().z() << " "
-               << pressureForce.value().x() << " "
-               << pressureForce.value().y() << " "
-               << pressureForce.value().z() << " "
-               << viscousForce.value().x() << " "
-               << viscousForce.value().y() << " "
-               << viscousForce.value().z() << " "
-               << aeroForce.value().x() << " "
-               << aeroForce.value().y() << " "
-               << aeroForce.value().z() << " "
-               << netForce.value().x() << " "
-               << netForce.value().y() << " "
-               << netForce.value().z() << endl;
+               << frameVelocity.value().x() << " " << frameVelocity.value().y() << " " << frameVelocity.value().z() << " "
+               << frameAcceleration.value().x() << " " << frameAcceleration.value().y() << " " << frameAcceleration.value().z() << " "
+               << gravity.value().x() << " " << gravity.value().y() << " " << gravity.value().z() << " "
+               << rhoAtmosphere.value() << " "
+               << pressureForce.value().x() << " " << pressureForce.value().y() << " " << pressureForce.value().z() << " "
+               << viscousForce.value().x() << " " << viscousForce.value().y() << " " << viscousForce.value().z() << " "
+               << aeroForce.value().x() << " " << aeroForce.value().y() << " " << aeroForce.value().z() << " "
+               << gravityForce.value().x() << " " << gravityForce.value().y() << " " << gravityForce.value().z() << " "
+               << netForce.value().x() << " " << netForce.value().y() << " " << netForce.value().z() << endl;
 }

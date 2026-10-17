@@ -31,6 +31,7 @@ Description
 #include "fvOptions.H"
 #include "localEulerDdtScheme.H"
 #include "fvcSmooth.H"
+#include "meanFlowModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
