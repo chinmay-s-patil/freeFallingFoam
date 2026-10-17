@@ -1,4 +1,6 @@
 EXE_INC = \
+    -DFF_COMPRESSIBLE \
+    -I../shared \
     -I$(FOAM_SOLVERS)/compressible/rhoCentralFoam/BCs/lnInclude \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/meshTools/lnInclude \
@@ -26,4 +28,3 @@ EXE_LIBS = \
     -ldynamicFvMesh \
     -L$(FOAM_USER_LIBBIN) \
     -lfreeFallingModels
-

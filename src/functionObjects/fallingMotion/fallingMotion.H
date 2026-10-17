@@ -53,6 +53,9 @@ class fallingMotion
         //- Output file stream pointer
         autoPtr<OFstream> motionFilePtr_;
 
+        //- Region name
+        word regionName_;
+
         //- Console print flags
         bool printFrameVel_;
         bool printFrameAcc_;
@@ -64,6 +67,10 @@ class fallingMotion
         bool printNetForce_;
         bool printMeanFlow_;
         bool printRelativeVel_;
+        bool printSpeedOfSound_;
+        bool printMachNumber_;
+        bool printMaxLocalMachNumber_;
+        bool printDynamicPressure_;
 
 
     // Private Member Functions

@@ -112,6 +112,24 @@ void Foam::functionObjects::fallingMotion::printConsole(const fvMesh& mesh)
     {
         Info<< "  Fnet = " << Fnet << " N" << endl;
     }
+    if (printSpeedOfSound_ && mesh.foundObject<uniformDimensionedScalarField>("speedOfSound"))
+    {
+        Info<< "  Speed of Sound = " << mesh.lookupObject<uniformDimensionedScalarField>("speedOfSound").value() << " m/s" << endl;
+    }
+    if (printMachNumber_ && mesh.foundObject<uniformDimensionedScalarField>("machNumber"))
+    {
+        Info<< "  Mach Number = " << mesh.lookupObject<uniformDimensionedScalarField>("machNumber").value() << endl;
+    }
+    if (printMaxLocalMachNumber_ && mesh.foundObject<uniformDimensionedScalarField>("maxLocalMachNumber"))
+    {
+        Info<< "  Max Local Mach = " << mesh.lookupObject<uniformDimensionedScalarField>("maxLocalMachNumber").value() << endl;
+    }
+    if (printDynamicPressure_ && mesh.foundObject<uniformDimensionedScalarField>("rhoAtmosphere") && mesh.foundObject<uniformDimensionedVectorField>("relativeVelocity"))
+    {
+        const scalar rho = mesh.lookupObject<uniformDimensionedScalarField>("rhoAtmosphere").value();
+        const vector& Urel = mesh.lookupObject<uniformDimensionedVectorField>("relativeVelocity").value();
+        Info<< "  Dynamic Pressure = " << (0.5 * rho * magSqr(Urel)) << " Pa" << endl;
+    }
 }
 
 void Foam::functionObjects::fallingMotion::writeLog(const fvMesh& mesh)
@@ -174,6 +192,7 @@ Foam::functionObjects::fallingMotion::fallingMotion
     time_(runTime),
     writeCSV_(true),
     motionFilePtr_(nullptr),
+    regionName_(polyMesh::defaultRegion),
     printFrameVel_(true),
     printFrameAcc_(true),
     printAltitude_(true),
@@ -183,7 +202,11 @@ Foam::functionObjects::fallingMotion::fallingMotion
     printGravityForce_(true),
     printNetForce_(true),
     printMeanFlow_(true),
-    printRelativeVel_(true)
+    printRelativeVel_(true),
+    printSpeedOfSound_(true),
+    printMachNumber_(true),
+    printMaxLocalMachNumber_(false),
+    printDynamicPressure_(false)
 {
     read(dict);
 }
@@ -193,20 +216,25 @@ Foam::functionObjects::fallingMotion::fallingMotion
 bool Foam::functionObjects::fallingMotion::read(const dictionary& dict)
 {
     writeCSV_ = dict.getOrDefault<bool>("writeCSV", true);
+    regionName_ = dict.getOrDefault<word>("region", polyMesh::defaultRegion);
 
     if (dict.found("print"))
     {
         const dictionary& printDict = dict.subDict("print");
-        printFrameVel_      = printDict.getOrDefault<bool>("frameVel", true);
-        printFrameAcc_      = printDict.getOrDefault<bool>("frameAcc", true);
-        printAltitude_      = printDict.getOrDefault<bool>("altitude", true);
-        printPressureForce_ = printDict.getOrDefault<bool>("pressureForce", false);
-        printViscousForce_  = printDict.getOrDefault<bool>("viscousForce", false);
-        printAeroForce_     = printDict.getOrDefault<bool>("aeroForce", true);
-        printGravityForce_  = printDict.getOrDefault<bool>("gravityForce", true);
-        printNetForce_      = printDict.getOrDefault<bool>("netForce", true);
-        printMeanFlow_      = printDict.getOrDefault<bool>("meanFlow", true);
-        printRelativeVel_   = printDict.getOrDefault<bool>("relativeVel", true);
+        printFrameVel_          = printDict.getOrDefault<bool>("frameVel", true);
+        printFrameAcc_          = printDict.getOrDefault<bool>("frameAcc", true);
+        printAltitude_          = printDict.getOrDefault<bool>("altitude", true);
+        printPressureForce_     = printDict.getOrDefault<bool>("pressureForce", false);
+        printViscousForce_      = printDict.getOrDefault<bool>("viscousForce", false);
+        printAeroForce_         = printDict.getOrDefault<bool>("aeroForce", true);
+        printGravityForce_      = printDict.getOrDefault<bool>("gravityForce", true);
+        printNetForce_          = printDict.getOrDefault<bool>("netForce", true);
+        printMeanFlow_          = printDict.getOrDefault<bool>("meanFlow", true);
+        printRelativeVel_       = printDict.getOrDefault<bool>("relativeVel", true);
+        printSpeedOfSound_      = printDict.getOrDefault<bool>("speedOfSound", true);
+        printMachNumber_        = printDict.getOrDefault<bool>("machNumber", true);
+        printMaxLocalMachNumber_= printDict.getOrDefault<bool>("maxLocalMachNumber", false);
+        printDynamicPressure_   = printDict.getOrDefault<bool>("dynamicPressure", false);
     }
 
     return true;
@@ -215,7 +243,11 @@ bool Foam::functionObjects::fallingMotion::read(const dictionary& dict)
 
 bool Foam::functionObjects::fallingMotion::execute()
 {
-    const fvMesh& mesh = time_.lookupObject<fvMesh>("region0");
+    if (!time_.foundObject<fvMesh>(regionName_))
+    {
+        return true;
+    }
+    const fvMesh& mesh = time_.lookupObject<fvMesh>(regionName_);
     printConsole(mesh);
     writeLog(mesh);
     return true;

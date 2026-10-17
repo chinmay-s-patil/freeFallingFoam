@@ -24,6 +24,8 @@ wclean "$PWD/utilities/writeFFDict"
 echo ""
 echo "--- Cleaning dynamic solvers ---"
 wclean "$PWD/solvers/tFFPimpleFoam"
+wclean "$PWD/solvers/tFFRhoPimpleFoam"
+wclean "$PWD/solvers/tFFRhoCentralFoam"
 
 echo ""
 echo "--- Cleaning function objects ---"

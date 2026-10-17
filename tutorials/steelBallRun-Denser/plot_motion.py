@@ -36,39 +36,64 @@ def parse_motion_dat(filepath):
 	if not lines:
 		raise ValueError("motion.dat file is empty.")
 
-	data_lines = []
+	data_lines_27 = []
+	data_lines_33 = []
 	for line in lines:
 		if line.startswith("#"):
 			continue
 		parts = line.split()
-		# Filter for valid rows with expected 27 scalar fields
-		if len(parts) == 27:
+		if len(parts) == 33:
 			try:
-				row = [float(val) for val in parts]
-				data_lines.append(row)
+				data_lines_33.append([float(val) for val in parts])
+			except ValueError:
+				continue
+		elif len(parts) == 27:
+			try:
+				data_lines_27.append([float(val) for val in parts])
 			except ValueError:
 				continue
 
-	if not data_lines:
+	# Prefer 33-column format if present, otherwise fallback to 27
+	if data_lines_33:
+		data = np.array(data_lines_33)
+		ncols = 33
+	elif data_lines_27:
+		data = np.array(data_lines_27)
+		ncols = 27
+	else:
 		raise ValueError("No valid numeric data lines found in motion.dat.")
 
-	data = np.array(data_lines)
-
-	# Standard column mapping based on fallingMotion.C / updateFallingFrameMotion.H
-	# Header: Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z Fnet_x Fnet_y Fnet_z
-	cols = {
-		'time': data[:, 0],
-		'alt': data[:, 1],
-		'Vx': data[:, 2], 'Vy': data[:, 3], 'Vz': data[:, 4],
-		'Ax': data[:, 5], 'Ay': data[:, 6], 'Az': data[:, 7],
-		'gx': data[:, 8], 'gy': data[:, 9], 'gz': data[:, 10],
-		'rho': data[:, 11],
-		'Fpress_x': data[:, 12], 'Fpress_y': data[:, 13], 'Fpress_z': data[:, 14],
-		'Fvisc_x': data[:, 15], 'Fvisc_y': data[:, 16], 'Fvisc_z': data[:, 17],
-		'Faero_x': data[:, 18], 'Faero_y': data[:, 19], 'Faero_z': data[:, 20],
-		'Fgrav_x': data[:, 21], 'Fgrav_y': data[:, 22], 'Fgrav_z': data[:, 23],
-		'Fnet_x': data[:, 24], 'Fnet_y': data[:, 25], 'Fnet_z': data[:, 26],
-	}
+	# Column mapping based on fallingMotion.C / correctFallingFrameMotion.H
+	if ncols == 33:
+		cols = {
+			'time': data[:, 0],
+			'alt': data[:, 1],
+			'Vx': data[:, 2], 'Vy': data[:, 3], 'Vz': data[:, 4],
+			'Ax': data[:, 5], 'Ay': data[:, 6], 'Az': data[:, 7],
+			'gx': data[:, 8], 'gy': data[:, 9], 'gz': data[:, 10],
+			'rho': data[:, 11],
+			'Umean_x': data[:, 12], 'Umean_y': data[:, 13], 'Umean_z': data[:, 14],
+			'Urel_x': data[:, 15], 'Urel_y': data[:, 16], 'Urel_z': data[:, 17],
+			'Fpress_x': data[:, 18], 'Fpress_y': data[:, 19], 'Fpress_z': data[:, 20],
+			'Fvisc_x': data[:, 21], 'Fvisc_y': data[:, 22], 'Fvisc_z': data[:, 23],
+			'Faero_x': data[:, 24], 'Faero_y': data[:, 25], 'Faero_z': data[:, 26],
+			'Fgrav_x': data[:, 27], 'Fgrav_y': data[:, 28], 'Fgrav_z': data[:, 29],
+			'Fnet_x': data[:, 30], 'Fnet_y': data[:, 31], 'Fnet_z': data[:, 32],
+		}
+	else:
+		cols = {
+			'time': data[:, 0],
+			'alt': data[:, 1],
+			'Vx': data[:, 2], 'Vy': data[:, 3], 'Vz': data[:, 4],
+			'Ax': data[:, 5], 'Ay': data[:, 6], 'Az': data[:, 7],
+			'gx': data[:, 8], 'gy': data[:, 9], 'gz': data[:, 10],
+			'rho': data[:, 11],
+			'Fpress_x': data[:, 12], 'Fpress_y': data[:, 13], 'Fpress_z': data[:, 14],
+			'Fvisc_x': data[:, 15], 'Fvisc_y': data[:, 16], 'Fvisc_z': data[:, 17],
+			'Faero_x': data[:, 18], 'Faero_y': data[:, 19], 'Faero_z': data[:, 20],
+			'Fgrav_x': data[:, 21], 'Fgrav_y': data[:, 22], 'Fgrav_z': data[:, 23],
+			'Fnet_x': data[:, 24], 'Fnet_y': data[:, 25], 'Fnet_z': data[:, 26],
+		}
 
 	# Computed scalar magnitudes
 	cols['V_mag'] = np.sqrt(cols['Vx']**2 + cols['Vy']**2 + cols['Vz']**2)

@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
             mesh.update();
         }
 
-        // Dynamic update of aerodynamic force, net acceleration, frame velocity, altitude, and BCs
-        #include "updateFallingFrameMotion.H"
+        // Dynamic update: predictor step for frame velocity, altitude, and BCs
+        #include "predictFallingFrameMotion.H"
 
         // --- Directed interpolation of primitive fields onto faces
 
@@ -282,6 +282,9 @@ int main(int argc, char *argv[])
         rho.boundaryFieldRef() == psi.boundaryField()*p.boundaryField();
 
         turbulence->correct();
+
+        // Dynamic update: corrector step (Heun) using converged fields at n+1
+        #include "correctFallingFrameMotion.H"
 
         if (triggerTerminalVelocityWrite)
         {
