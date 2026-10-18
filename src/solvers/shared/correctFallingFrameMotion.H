@@ -24,14 +24,15 @@ forAll(patchNames, i)
     if (patchi != -1)
     {
         const fvPatchScalarField& p_rgh_p = p_rgh.boundaryField()[patchi];
+        const fvPatchScalarField& gh_p = gh.boundaryField()[patchi];
         const fvPatchSymmTensorField& devTau_p = devTau.boundaryField()[patchi];
         const vectorField& Sf = mesh.boundary()[patchi].Sf();
 
         forAll(p_rgh_p, facei)
         {
-            // Pressure force: p_rgh is kinematic [m2/s2] in incompressible solver,
-            // multiplied by rhoAtmosphere [kg/m3] to obtain force [N].
-            fPress += p_rgh_p[facei] * Sf[facei] * rhoAtmosphere.value();
+            // Total pressure: p = p_rgh + gh if includeBuoyancy is true (default), else p_rgh
+            const scalar pFace = includeBuoyancy ? (p_rgh_p[facei] + gh_p[facei]) : p_rgh_p[facei];
+            fPress += pFace * Sf[facei] * rhoAtmosphere.value();
 
             // Viscous shear force exerted on body wall by fluid: (devTau & Sf) * rho
             fVisc += (devTau_p[facei] & Sf[facei]) * rhoAtmosphere.value();
@@ -106,14 +107,14 @@ else
 
 if (gravityModel == "altitudeBased")
 {
-    const scalar magG0 = max(mag(initialAcc), SMALL);
+    const scalar magG0 = max(mag(initialGravity), SMALL);
     const scalar effectiveAlt = max(alt_corrected - groundAltitude, 0.0);
     const scalar gMag = magG0 * sqr(earthRadius / (earthRadius + effectiveAlt));
-    gravity.value() = (initialAcc / magG0) * gMag;
+    gravity.value() = (initialGravity / magG0) * gMag;
 }
 else
 {
-    gravity.value() = initialAcc;
+    gravity.value() = initialGravity;
 }
 
 // Update mean atmospheric flow and relative freestream velocity
@@ -123,12 +124,16 @@ if (meanFlowPtr.valid())
 }
 relativeVelocity.value() = meanFlowVelocity.value() - frameVelocity.value();
 
-// Update pseudo-force
-fallingFrameForce.value() = -frameAcceleration.value();
+// Update apparent body force: g - a_frame
+fallingFrameForce.value() = gravity.value() - frameAcceleration.value();
 
 #if defined(FF_INCOMPRESSIBLE)
-gh = (fallingFrameForce & mesh.C());
-ghf = (fallingFrameForce & mesh.Cf());
+{
+    const volScalarField gh_old("gh_old", gh);
+    gh = (fallingFrameForce & mesh.C());
+    ghf = (fallingFrameForce & mesh.Cf());
+    p_rgh += gh_old - gh;
+}
 #endif
 
 // Correct boundary conditions to final converged frame velocity
@@ -168,7 +173,32 @@ U.correctBoundaryConditions();
         "c",
         Foam::sqrt(thermo.Cp() / thermo.Cv() * (1.0 / psi))
     );
-    speedOfSound.value() = gAverage(c);
+
+    // Compute ambient reference speed of sound on undisturbed non-body boundaries
+    scalar cAmbientSum = 0.0;
+    scalar cAmbientArea = 0.0;
+    forAll(mesh.boundaryMesh(), patchi)
+    {
+        const polyPatch& pp = mesh.boundaryMesh()[patchi];
+        if (!pp.coupled() && pp.type() != "empty" && !patchNames.found(pp.name()))
+        {
+            const fvPatchScalarField& c_p = c.boundaryField()[patchi];
+            const scalarField& magSf = mesh.magSf().boundaryField()[patchi];
+            cAmbientSum += sum(c_p * magSf);
+            cAmbientArea += sum(magSf);
+        }
+    }
+    reduce(cAmbientSum, sumOp<scalar>());
+    reduce(cAmbientArea, sumOp<scalar>());
+
+    if (cAmbientArea > SMALL)
+    {
+        speedOfSound.value() = cAmbientSum / cAmbientArea;
+    }
+    else
+    {
+        speedOfSound.value() = speedOfSoundRef;
+    }
 
     const scalar vRelMag = mag(relativeVelocity.value());
     machNumber.value() = vRelMag / max(speedOfSound.value(), SMALL);
@@ -206,9 +236,8 @@ U.correctBoundaryConditions();
             {
                 Info<< "\n[MACH REGIME STOPPER] Max local Mach number (" << maxLocalMachNumber.value()
                     << ") reached cutoff (" << machRegimeSwitchCutOff
-                    << "). Stopper triggered. Writing output and ending simulation." << nl << endl;
-                runTime.writeNow();
-                runTime.setTime(runTime.endTime().value(), runTime.timeIndex());
+                    << "). Stopper triggered." << nl << endl;
+                triggerMachStopper = true;
             }
         }
     }
@@ -221,6 +250,7 @@ U.correctBoundaryConditions();
 // ------------------------------------------------------------
 {
     velHistory[velHistoryIndex] = mag(frameVelocity.value());
+    accHistory[velHistoryIndex] = frameAcceleration.value();
     velHistoryIndex = (velHistoryIndex + 1) % terminalVelocitySamples;
     if (velHistoryCount < terminalVelocitySamples)
     {
@@ -231,14 +261,17 @@ U.correctBoundaryConditions();
     {
         scalar minV = velHistory[0];
         scalar maxV = velHistory[0];
-        for (label vi = 1; vi < terminalVelocitySamples; ++vi)
+        vector accSum = vector::zero;
+        for (label vi = 0; vi < terminalVelocitySamples; ++vi)
         {
             minV = min(minV, velHistory[vi]);
             maxV = max(maxV, velHistory[vi]);
+            accSum += accHistory[vi];
         }
         const scalar vVar = maxV - minV;
+        const vector aMean = accSum / terminalVelocitySamples;
 
-        if (mag(frameAcceleration.value()) < terminalAccelerationTolerance && vVar < terminalVelocityTolerance)
+        if (mag(aMean) < terminalAccelerationTolerance && vVar < terminalVelocityTolerance)
         {
             if (!terminalVelocityTriggered)
             {
@@ -340,19 +373,29 @@ if (fallingFrameDict.found("print"))
 if (groundInterrupt && (altitude.value() <= groundAltitude) && (runTime.timeIndex() > 0))
 {
     Info<< "\n[GROUND INTERRUPT] Body reached ground altitude ("
-        << altitude.value() << " <= " << groundAltitude << " m). Terminating simulation." << nl << endl;
-    runTime.writeNow();
-    runTime.setTime(runTime.endTime().value(), runTime.timeIndex());
+        << altitude.value() << " <= " << groundAltitude << " m)." << nl << endl;
+    triggerGroundInterrupt = true;
 }
 
 // ------------------------------------------------------------
-//  8. Write postProcessing motion data (unified 33 columns)
+//  8. Write postProcessing motion data (unified 35 columns)
 //
 //     Controlled by "writeMotionLog" (default: true) in fallingFrameDict.
-//     Set to false when using the fallingMotion function object to
+//     Automatically deactivated when using the fallingMotion function object to
 //     avoid duplicate writes to postProcessing/fallingMotion/motion.dat.
 // ------------------------------------------------------------
-if (Pstream::master() && fallingFrameDict.getOrDefault<bool>("writeMotionLog", true))
+bool foMotionActive = false;
+const functionObjectList& fol = mesh.time().functionObjects();
+forAll(fol, foi)
+{
+    if (fol[foi].type() == "fallingMotion" || fol[foi].name() == "fallingMotion")
+    {
+        foMotionActive = true;
+        break;
+    }
+}
+
+if (Pstream::master() && !foMotionActive && fallingFrameDict.getOrDefault<bool>("writeMotionLog", true))
 {
     fileName motionDir = runTime.path()/"postProcessing"/"fallingMotion";
     mkDir(motionDir);
@@ -376,7 +419,7 @@ if (Pstream::master() && fallingFrameDict.getOrDefault<bool>("writeMotionLog", t
         if (!append)
         {
             motionFilePtr()
-                << "# Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho "
+                << "# Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho a_sound Mach "
                 << "Umean_x Umean_y Umean_z Urel_x Urel_y Urel_z "
                 << "Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z "
                 << "Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z "
@@ -391,6 +434,8 @@ if (Pstream::master() && fallingFrameDict.getOrDefault<bool>("writeMotionLog", t
                << frameAcceleration.value().x() << " " << frameAcceleration.value().y() << " " << frameAcceleration.value().z() << " "
                << gravity.value().x() << " " << gravity.value().y() << " " << gravity.value().z() << " "
                << rhoAtmosphere.value() << " "
+               << speedOfSound.value() << " "
+               << machNumber.value() << " "
                << meanFlowVelocity.value().x() << " " << meanFlowVelocity.value().y() << " " << meanFlowVelocity.value().z() << " "
                << relativeVelocity.value().x() << " " << relativeVelocity.value().y() << " " << relativeVelocity.value().z() << " "
                << pressureForce.value().x() << " " << pressureForce.value().y() << " " << pressureForce.value().z() << " "

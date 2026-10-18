@@ -24,12 +24,34 @@ const vector u0
     fallingFrameDict.getOrDefault<vector>("u0", vector::zero)
 );
 
-// Support both 'gravity' and 'acceleration' dictionary keys
-const vector initialAcc
+// Support both 'gravity' and 'acceleration' dictionary keys for planetary gravity
+const vector initialGravity
 (
     fallingFrameDict.found("gravity")
   ? fallingFrameDict.get<vector>("gravity")
-  : fallingFrameDict.get<vector>("acceleration")
+  : fallingFrameDict.getOrDefault<vector>("acceleration", vector(0, -9.81, 0))
+);
+
+// Motion degrees of freedom mask (vector): 1 = free, 0 = constrained
+const vector freedomMask
+(
+    fallingFrameDict.getOrDefault<vector>("freedom", vector(0, 1, 0))
+);
+
+if (freedomMask.x() < 0.0 || freedomMask.x() > 1.0 ||
+    freedomMask.y() < 0.0 || freedomMask.y() > 1.0 ||
+    freedomMask.z() < 0.0 || freedomMask.z() > 1.0)
+{
+    Info<< "  [Warning] freedomMask has non-binary entries: " << freedomMask
+        << ". Acceleration will be scaled accordingly." << nl;
+}
+
+// Initial kinematic frame acceleration (defaults to gravity masked by freedom)
+const vector initialFrameAcc
+(
+    fallingFrameDict.found("initialAcceleration")
+  ? cmptMultiply(fallingFrameDict.get<vector>("initialAcceleration"), freedomMask)
+  : cmptMultiply(initialGravity, freedomMask)
 );
 
 const scalar bodyMass
@@ -127,19 +149,12 @@ if (terminalVelocityTolerance <= 0.0 || terminalAccelerationTolerance <= 0.0)
         << exit(FatalError);
 }
 
-// Motion degrees of freedom mask (vector): 1 = free, 0 = constrained
-const vector freedomMask
+#if defined(FF_INCOMPRESSIBLE)
+const bool includeBuoyancy
 (
-    fallingFrameDict.getOrDefault<vector>("freedom", vector(0, 1, 0))
+    fallingFrameDict.getOrDefault<bool>("includeBuoyancy", true)
 );
-
-if (freedomMask.x() < 0.0 || freedomMask.x() > 1.0 ||
-    freedomMask.y() < 0.0 || freedomMask.y() > 1.0 ||
-    freedomMask.z() < 0.0 || freedomMask.z() > 1.0)
-{
-    Info<< "  [Warning] freedomMask has non-binary entries: " << freedomMask
-        << ". Acceleration will be scaled accordingly." << nl;
-}
+#endif
 
 label terminalVelocitySamples
 (
@@ -196,10 +211,13 @@ if (fallingFrameDict.found("meanFlow"))
 }
 
 bool triggerTerminalVelocityWrite = false;
+bool triggerGroundInterrupt = false;
+bool triggerMachStopper = false;
 
 Info<< "  Falling body properties:" << nl
     << "    u0             = " << u0 << " m/s" << nl
-    << "    acceleration   = " << initialAcc << " m/s2" << nl
+    << "    initialAcc     = " << initialFrameAcc << " m/s2" << nl
+    << "    gravity        = " << initialGravity << " m/s2" << nl
     << "    freedom        = " << freedomMask << nl
     << "    mass           = " << bodyMass << " kg" << nl
     << "    patches        = " << patchNames << nl
@@ -324,7 +342,7 @@ uniformDimensionedVectorField frameAcceleration
         IOobject::READ_IF_PRESENT,
         IOobject::AUTO_WRITE
     ),
-    dimensionedVector("frameAcceleration", dimAcceleration, initialAcc)
+    dimensionedVector("frameAcceleration", dimAcceleration, initialFrameAcc)
 );
 
 uniformDimensionedScalarField altitude
@@ -352,7 +370,7 @@ uniformDimensionedVectorField gravity
         IOobject::READ_IF_PRESENT,
         IOobject::AUTO_WRITE
     ),
-    dimensionedVector("gravity", dimAcceleration, initialAcc)
+    dimensionedVector("gravity", dimAcceleration, initialGravity)
 );
 
 uniformDimensionedScalarField rhoAtmosphere
@@ -422,7 +440,7 @@ uniformDimensionedVectorField gravityForce
         IOobject::READ_IF_PRESENT,
         IOobject::AUTO_WRITE
     ),
-    dimensionedVector("gravityForce", dimForce, bodyMass * initialAcc)
+    dimensionedVector("gravityForce", dimForce, bodyMass * initialGravity)
 );
 
 uniformDimensionedVectorField netForce
@@ -436,7 +454,7 @@ uniformDimensionedVectorField netForce
         IOobject::READ_IF_PRESENT,
         IOobject::AUTO_WRITE
     ),
-    dimensionedVector("netForce", dimForce, bodyMass * initialAcc)
+    dimensionedVector("netForce", dimForce, bodyMass * initialFrameAcc)
 );
 
 uniformDimensionedVectorField meanFlowVelocity
@@ -516,11 +534,12 @@ uniformDimensionedScalarField maxLocalMachNumber
 //  Spatial Fields
 // ============================================================
 
+// Apparent body force in the non-inertial body frame: g - a_frame
 dimensionedVector fallingFrameForce
 (
     "fallingFrameForce",
     dimAcceleration,
-    -frameAcceleration.value()
+    gravity.value() - frameAcceleration.value()
 );
 
 #if defined(FF_INCOMPRESSIBLE)
@@ -560,6 +579,7 @@ volScalarField magUStar
 
 // O(1) circular ring buffer for natural terminal velocity detection
 List<scalar> velHistory(terminalVelocitySamples, 0.0);
+List<vector> accHistory(terminalVelocitySamples, vector::zero);
 label velHistoryCount = 0;
 label velHistoryIndex = 0;
 bool terminalVelocityTriggered = false;

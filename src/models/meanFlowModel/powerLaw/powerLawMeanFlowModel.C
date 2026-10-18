@@ -44,9 +44,14 @@ Foam::meanFlowModels::powerLaw::powerLaw(const dictionary& dict)
 
 Foam::vector Foam::meanFlowModels::powerLaw::velocity(const scalar altitude) const
 {
-    const scalar hNumerator   = max(altitude - groundHeight_, SMALL);
+    if (altitude <= groundHeight_)
+    {
+        return vector::zero;
+    }
+
+    const scalar hNumerator   = altitude - groundHeight_;
     const scalar hDenominator = max(referenceHeight_ - groundHeight_, SMALL);
-    const scalar ratio        = max(hNumerator / hDenominator, SMALL);
+    const scalar ratio        = max(hNumerator / hDenominator, 0.0);
 
     return referenceVelocity_ * pow(ratio, exponent_);
 }

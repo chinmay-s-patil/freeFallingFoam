@@ -156,11 +156,11 @@ int main(int argc, char *argv[])
             }
         }
 
-        // Reconstruct total pressure p = p_rgh + gh
-        p = p_rgh + gh;
-
         // Dynamic update: corrector step (Heun) using converged fields at n+1
         #include "correctFallingFrameMotion.H"
+
+        // Reconstruct total pressure p = p_rgh + gh using converged n+1 frame state
+        p = p_rgh + gh;
 
         if (triggerTerminalVelocityWrite)
         {
@@ -174,6 +174,18 @@ int main(int argc, char *argv[])
                 Info<< "[DIAGNOSTIC] Terminal velocity stop condition reached. Ending simulation." << nl << endl;
                 break;
             }
+        }
+        else if (triggerGroundInterrupt)
+        {
+            Info<< "[GROUND INTERRUPT] Body reached ground altitude. Saving state and ending simulation." << nl << endl;
+            runTime.writeNow();
+            break;
+        }
+        else if (triggerMachStopper)
+        {
+            Info<< "[MACH REGIME STOPPER] Mach cutoff reached. Saving state and ending simulation." << nl << endl;
+            runTime.writeNow();
+            break;
         }
         else
         {

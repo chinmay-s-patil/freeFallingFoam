@@ -297,6 +297,18 @@ int main(int argc, char *argv[])
                 break;
             }
         }
+        else if (triggerGroundInterrupt)
+        {
+            Info<< "[GROUND INTERRUPT] Body reached ground altitude. Saving state and ending simulation." << nl << endl;
+            runTime.writeNow();
+            break;
+        }
+        else if (triggerMachStopper)
+        {
+            Info<< "[MACH REGIME STOPPER] Mach cutoff reached. Saving state and ending simulation." << nl << endl;
+            runTime.writeNow();
+            break;
+        }
         else
         {
             runTime.write();

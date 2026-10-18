@@ -63,14 +63,14 @@ else
 
 if (gravityModel == "altitudeBased")
 {
-    const scalar magG0 = max(mag(initialAcc), SMALL);
+    const scalar magG0 = max(mag(initialGravity), SMALL);
     const scalar effectiveAlt = max(alt_pred - groundAltitude, 0.0);
     const scalar gMag = magG0 * sqr(earthRadius / (earthRadius + effectiveAlt));
-    gravity.value() = (initialAcc / magG0) * gMag;
+    gravity.value() = (initialGravity / magG0) * gMag;
 }
 else
 {
-    gravity.value() = initialAcc;
+    gravity.value() = initialGravity;
 }
 
 // ------------------------------------------------------------
@@ -85,13 +85,17 @@ meanFlowVelocity.value() = Umean_pred;
 relativeVelocity.value() = meanFlowVelocity.value() - frameVelocity.value();
 
 // ------------------------------------------------------------
-//  5. Update pseudo-force in momentum equations
+//  5. Update apparent body force in momentum equations: g - a_frame
 // ------------------------------------------------------------
-fallingFrameForce.value() = -a_prev;
+fallingFrameForce.value() = gravity.value() - a_prev;
 
 #if defined(FF_INCOMPRESSIBLE)
-gh = (fallingFrameForce & mesh.C());
-ghf = (fallingFrameForce & mesh.Cf());
+{
+    const volScalarField gh_old("gh_old", gh);
+    gh = (fallingFrameForce & mesh.C());
+    ghf = (fallingFrameForce & mesh.Cf());
+    p_rgh += gh_old - gh;
+}
 #endif
 
 // ------------------------------------------------------------

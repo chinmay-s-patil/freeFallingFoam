@@ -86,8 +86,24 @@ void fallingInletVelocityFvPatchVectorField::readParams
             )
         );
 
-        u0_           = frameDict.get<vector>("u0");
-        acceleration_ = frameDict.get<vector>("acceleration");
+        u0_ = frameDict.getOrDefault<vector>("u0", vector::zero);
+
+        if (frameDict.found("initialAcceleration"))
+        {
+            acceleration_ = frameDict.get<vector>("initialAcceleration");
+        }
+        else if (frameDict.found("acceleration"))
+        {
+            acceleration_ = frameDict.get<vector>("acceleration");
+        }
+        else if (frameDict.found("gravity"))
+        {
+            acceleration_ = frameDict.get<vector>("gravity");
+        }
+        else
+        {
+            acceleration_ = vector(0, -9.81, 0);
+        }
 
         if (frameDict.found("maxFrameSpeed"))
         {
@@ -279,9 +295,14 @@ void fallingInletVelocityFvPatchVectorField::updateCoeffs()
 
     refGrad() = vector::zero;
 
+    const scalar magTestU = mag(testU);
+
     forAll(Sf, facei)
     {
-        if ((Sf[facei] & testU) < 0)
+        const scalar flux = (Sf[facei] & testU);
+        const scalar tol = 1e-6 * mag(Sf[facei]) * magTestU;
+
+        if (flux < -tol)
         {
             // Inflow face: prescribe the frame-relative inlet velocity.
             refValue()[facei]      = Uinlet;
@@ -289,7 +310,7 @@ void fallingInletVelocityFvPatchVectorField::updateCoeffs()
         }
         else
         {
-            // Outflow face: zeroGradient
+            // Outflow or parallel face: zeroGradient
             refValue()[facei]      = vector::zero;
             valueFraction()[facei] = 0.0;
         }
@@ -301,7 +322,7 @@ void fallingInletVelocityFvPatchVectorField::updateCoeffs()
 
 void fallingInletVelocityFvPatchVectorField::write(Ostream& os) const
 {
-    fvPatchVectorField::write(os);
+    mixedFvPatchVectorField::write(os);
 
     if (overrideParams_)
     {
@@ -314,8 +335,6 @@ void fallingInletVelocityFvPatchVectorField::write(Ostream& os) const
     }
     // When overrideParams_ is false the reader finds parameters in
     // fallingFrameDict, so we do not duplicate them here.
-
-    fvPatchVectorField::writeValueEntry(os);
 }
 
 

@@ -54,7 +54,7 @@ void Foam::functionObjects::fallingMotion::openFile()
         if (!append)
         {
             motionFilePtr_()
-                << "# Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho "
+                << "# Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho a_sound Mach "
                 << "Umean_x Umean_y Umean_z Urel_x Urel_y Urel_z "
                 << "Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z "
                 << "Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z "
@@ -162,6 +162,12 @@ void Foam::functionObjects::fallingMotion::writeLog(const fvMesh& mesh)
     const scalar alt     = mesh.lookupObject<uniformDimensionedScalarField>("altitude").value();
     const vector& grav   = mesh.lookupObject<uniformDimensionedVectorField>("gravity").value();
     const scalar rho     = mesh.lookupObject<uniformDimensionedScalarField>("rhoAtmosphere").value();
+    const scalar a_sound = mesh.foundObject<uniformDimensionedScalarField>("speedOfSound")
+                         ? mesh.lookupObject<uniformDimensionedScalarField>("speedOfSound").value()
+                         : 0.0;
+    const scalar Mach    = mesh.foundObject<uniformDimensionedScalarField>("machNumber")
+                         ? mesh.lookupObject<uniformDimensionedScalarField>("machNumber").value()
+                         : 0.0;
     const vector Umean   = mesh.foundObject<uniformDimensionedVectorField>("meanFlowVelocity")
                          ? mesh.lookupObject<uniformDimensionedVectorField>("meanFlowVelocity").value()
                          : vector::zero;
@@ -181,6 +187,8 @@ void Foam::functionObjects::fallingMotion::writeLog(const fvMesh& mesh)
         << Aframe.x() << " " << Aframe.y() << " " << Aframe.z() << " "
         << grav.x() << " " << grav.y() << " " << grav.z() << " "
         << rho << " "
+        << a_sound << " "
+        << Mach << " "
         << Umean.x() << " " << Umean.y() << " " << Umean.z() << " "
         << Urel.x() << " " << Urel.y() << " " << Urel.z() << " "
         << Fpress.x() << " " << Fpress.y() << " " << Fpress.z() << " "

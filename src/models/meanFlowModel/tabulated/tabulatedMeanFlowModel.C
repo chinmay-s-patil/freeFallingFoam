@@ -33,7 +33,13 @@ Foam::meanFlowModels::tabulated::tabulated(const dictionary& dict)
 {
     dict.readIfPresent("table", table_);
 
-    if (table_.size() > 1)
+    if (table_.empty())
+    {
+        IOWarningInFunction(dict)
+            << "No 'table' entries found in tabulated meanFlow model dictionary. "
+            << "Model will return vector::zero." << nl;
+    }
+    else if (table_.size() > 1)
     {
         std::sort
         (
