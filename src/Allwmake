@@ -3,6 +3,8 @@ cd "${0%/*}" || exit 1   # run from this directory
 
 . "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
 
+set -e
+
 # ============================================================
 #  src/Allwmake — freeFallingFoam core components
 #
@@ -10,7 +12,8 @@ cd "${0%/*}" || exit 1   # run from this directory
 #    1. Boundary conditions (BCs/fallingInletVelocity)
 #    2. Shared models library (models -> libfreeFallingModels.so)
 #    3. Function objects (functionObjects/fallingMotion)
-#    4. Dynamic solvers (solvers/tFFPimpleFoam)
+#    4. Dynamic solvers (tFFPimpleFoam, tFFRhoPimpleFoam, tFFRhoCentralFoam)
+#    5. Utilities (writeFFDict)
 # ============================================================
 
 echo "========================================================"

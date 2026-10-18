@@ -28,13 +28,13 @@ dU/dt + div(phi, U) - div(nu * grad(U)) = -grad(p)/rho - a_frame
 ```
 
 ### 2. Boundary Condition (`fallingInletVelocity`)
-The custom boundary condition [`fallingInletVelocity`](file:///home/lavender/OpenFoamUbu/freeFallingFoam/BCs/fallingInletVelocity/fallingInletVelocityFvPatchVectorField.H) prescribes the relative incoming freestream velocity on inflow faces (`phi < 0`):
+The custom boundary condition [`fallingInletVelocity`](file:///home/lavender/OpenFoamUbu/solvers/freeFallingFoam/src/BCs/fallingInletVelocity/fallingInletVelocityFvPatchVectorField.H) prescribes the relative incoming freestream velocity on inflow faces (`(Sf & testU) < 0` where `testU` is the frame-relative velocity direction):
 
 ```
 U_inlet(t) = -(u0 + a_frame * t)
 ```
 
-On outflow faces (`phi >= 0`), a Neumann (zero-gradient) condition is applied to prevent numerical reflections of wake vortices. Optional velocity clamping via `terminalVelocity` / `maxFrameSpeed` is also supported.
+On outflow faces (`(Sf & testU) >= 0`), a Neumann (zero-gradient) condition is applied to prevent numerical reflections of wake vortices. Optional velocity clamping via `terminalVelocity` / `maxFrameSpeed` is also supported.
 
 ### 3. Hydrostatic-Reduced Pressure Formulation (`p_rgh`)
 For 6DoF tumbling bodies ([`freeFalling6DoFPimpleFoam`](file:///home/lavender/OpenFoamUbu/freeFallingFoam/solvers/freeFalling6DoFPimpleFoam/freeFalling6DoFPimpleFoam.C)), uniform frame acceleration produces a pseudo-hydrostatic pressure gradient. Integrating total pressure `p` over an asymmetric body surface introduces spurious hydrostatic forces and moments, causing rotational blowup. 
@@ -63,6 +63,7 @@ freeFallingFoam/
 │   ├── functionObjects/          # Motion tracking & logging function objects
 │   │   └── fallingMotion/        # Console & motion.dat logger
 │   ├── solvers/                  # True free-falling dynamic solvers
+│   │   ├── shared/               # Shared predictor-corrector kinematics & logging headers
 │   │   ├── tFFPimpleFoam         # Incompressible transient solver
 │   │   ├── tFFRhoPimpleFoam      # Pressure-based compressible solver
 │   │   └── tFFRhoCentralFoam     # Density-based central-upwind solver (Kurganov-Tadmor)
@@ -133,8 +134,29 @@ u0                  ( 0  0  0 );
 // Frame acceleration vector (e.g., gravity in -y direction)
 acceleration        ( 0 -9.81 0 );
 
+// Body mass [kg] (required)
+mass                98018;
+
+// Wall patch(es) for aerodynamic force integration (required)
+patches             ( sphere );
+
+// Motion degrees of freedom mask: (0 1 0) for 1D drop, (1 1 1) for 3D
+freedom             ( 0 1 0 );
+
+// Reference density [kg/m^3]
+rhoInf              1.204;
+
+// Altitude and ground collision controls (optional)
+initialAltitude     10000;
+groundAltitude      0;
+groundInterrupt     on;
+
 // Terminal velocity clamping (optional)
 terminalVelocity    85;
+
+// Output logging to postProcessing/fallingMotion/motion.dat (default: true)
+// Note: Set to false if you are using the fallingMotion function object
+writeMotionLog      true;
 ```
 
 In `0/U`, configure the `fallingInletVelocity` boundary condition on far-field patches:
@@ -143,6 +165,11 @@ In `0/U`, configure the `fallingInletVelocity` boundary condition on far-field p
 inlet
 {
     type            fallingInletVelocity;
+    // Optional: inline parameters override constant/fallingFrameDict
+    // u0           ( 0 0 0 );
+    // acceleration ( 0 -9.81 0 );
+    // terminalVelocity 85;
+    // value        uniform (0 0 0);
 }
 ```
 

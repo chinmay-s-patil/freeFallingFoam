@@ -16,7 +16,7 @@ fvOptions.constrain(UEqn);
 
 if (pimple.momentumPredictor())
 {
-    solve(UEqn == -fvc::grad(p_rgh) + fallingFrameForce);
+    solve(UEqn == -fvc::grad(p_rgh));
 
     fvOptions.correct(U);
 }

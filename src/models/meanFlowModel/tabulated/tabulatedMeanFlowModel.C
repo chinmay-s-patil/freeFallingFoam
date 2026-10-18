@@ -15,6 +15,7 @@ Implementation
 
 #include "tabulatedMeanFlowModel.H"
 #include "addToRunTimeSelectionTable.H"
+#include <algorithm>
 
 namespace Foam
 {
@@ -31,6 +32,19 @@ Foam::meanFlowModels::tabulated::tabulated(const dictionary& dict)
     table_()
 {
     dict.readIfPresent("table", table_);
+
+    if (table_.size() > 1)
+    {
+        std::sort
+        (
+            table_.begin(),
+            table_.end(),
+            [](const Tuple2<scalar, vector>& a, const Tuple2<scalar, vector>& b)
+            {
+                return a.first() < b.first();
+            }
+        );
+    }
 }
 
 Foam::vector Foam::meanFlowModels::tabulated::velocity(const scalar altitude) const

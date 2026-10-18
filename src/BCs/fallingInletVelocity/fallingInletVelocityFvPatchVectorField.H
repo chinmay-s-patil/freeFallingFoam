@@ -33,12 +33,13 @@ Description
     Inlet/outlet velocity boundary condition for a body-fixed (falling/
     accelerating) reference frame.
 
-    On faces where flow enters the domain (phi < 0) the patch velocity is
-    set to the frame-relative inlet value:
+    On faces where flow enters the domain ((Sf & testU) < 0, where testU is the
+    frame-relative inlet direction) the patch velocity is set to the
+    frame-relative inlet value:
 
         U_inlet(t) = -(u0 + acceleration * t)   [clamped to maxFrameSpeed]
 
-    On faces where flow exits (phi >= 0) a zero-gradient (Neumann) condition
+    On faces where flow exits ((Sf & testU) >= 0) a zero-gradient (Neumann) condition
     is applied, allowing wake fluctuations to leave without reflecting.
 
     This mixed Dirichlet/Neumann behaviour prevents blow-up when unsteady

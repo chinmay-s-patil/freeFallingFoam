@@ -3,20 +3,33 @@ cd "${0%/*}" || exit 1   # run from this directory
 
 . "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
 
+set -e
+
 # ============================================================
 #  Root Allwmake — freeFallingFoam master build script
 # ============================================================
 
 echo "========================================================"
-echo "  Building freeFallingFoam (src & legacy)"
+echo "  Building freeFallingFoam core src"
 echo "========================================================"
 
 if [ -f "$PWD/src/Allwmake" ]; then
     "$PWD/src/Allwmake"
 fi
 
-if [ -f "$PWD/legacy/predescribedMotion/Allwmake" ]; then
-    "$PWD/legacy/predescribedMotion/Allwmake"
+# Build legacy prescribed-motion solvers if requested
+if [ "$1" = "--with-legacy" ] || [ "${BUILD_LEGACY:-0}" = "1" ]; then
+    if [ -f "$PWD/legacy/predescribedMotion/Allwmake" ]; then
+        echo ""
+        echo "========================================================"
+        echo "  Building legacy prescribed-motion solvers"
+        echo "========================================================"
+        "$PWD/legacy/predescribedMotion/Allwmake"
+    fi
+else
+    echo ""
+    echo "Note: Legacy prescribed-motion solvers were skipped by default."
+    echo "      To build them, run: ./Allwmake --with-legacy (or BUILD_LEGACY=1 ./Allwmake)"
 fi
 
 echo ""

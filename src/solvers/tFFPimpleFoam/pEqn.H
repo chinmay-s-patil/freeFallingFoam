@@ -31,8 +31,6 @@ if (pimple.consistent())
     HbyA -= (rAU - rAtU())*fvc::grad(p_rgh);
 }
 
-// Add hydrostatic head flux contribution
-phiHbyA += fvc::interpolate(rAtU())*fvc::snGrad(gh)*mesh.magSf();
 
 if (pimple.nCorrPISO() <= 1)
 {
@@ -62,7 +60,7 @@ while (pimple.correctNonOrthogonal())
 
 p_rgh.relax();
 
-U = HbyA - rAtU()*fvc::grad(p_rgh) + rAtU()*fallingFrameForce;
+U = HbyA - rAtU()*fvc::grad(p_rgh);
 U.correctBoundaryConditions();
 fvOptions.correct(U);
 

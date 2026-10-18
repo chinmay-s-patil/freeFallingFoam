@@ -17,7 +17,8 @@
         )
       - fvm::laplacian(turbulence->alphaEff(), he)
      ==
-        fvOptions(rho, he)
+        rho*(U & fallingFrameForce)
+      + fvOptions(rho, he)
     );
 
     if (MRF.active())

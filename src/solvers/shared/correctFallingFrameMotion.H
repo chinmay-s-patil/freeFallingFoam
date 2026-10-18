@@ -1,5 +1,9 @@
 // ============================================================
-//  correctFallingFrameMotion.H — 2nd-order Heun Corrector Step
+//  correctFallingFrameMotion.H — Predictor-Corrector Corrector Step
+//
+//  Trapezoidal (Crank-Nicolson) corrector using converged aero
+//  forces from the PIMPLE / density solve at this timestep.
+//  See predictFallingFrameMotion.H for full scheme description.
 // ============================================================
 
 #include "OFstream.H"
@@ -343,6 +347,10 @@ if (groundInterrupt && (altitude.value() <= groundAltitude) && (runTime.timeInde
 
 // ------------------------------------------------------------
 //  8. Write postProcessing motion data (unified 33 columns)
+//
+//     Controlled by "writeMotionLog" (default: true) in fallingFrameDict.
+//     Set to false when using the fallingMotion function object to
+//     avoid duplicate writes to postProcessing/fallingMotion/motion.dat.
 // ------------------------------------------------------------
 if (Pstream::master() && fallingFrameDict.getOrDefault<bool>("writeMotionLog", true))
 {
@@ -352,13 +360,28 @@ if (Pstream::master() && fallingFrameDict.getOrDefault<bool>("writeMotionLog", t
     static autoPtr<OFstream> motionFilePtr;
     if (!motionFilePtr.valid())
     {
-        motionFilePtr.reset(new OFstream(motionDir/"motion.dat"));
-        motionFilePtr()
-            << "# Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho "
-            << "Umean_x Umean_y Umean_z Urel_x Urel_y Urel_z "
-            << "Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z "
-            << "Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z "
-            << "Fnet_x Fnet_y Fnet_z" << endl;
+        const fileName motionPath = motionDir/"motion.dat";
+        const bool append = (runTime.timeIndex() > runTime.startTimeIndex()) || (isFile(motionPath) && runTime.value() > 0);
+
+        motionFilePtr.reset
+        (
+            new OFstream
+            (
+                motionPath,
+                IOstreamOption(),
+                (append ? IOstreamOption::APPEND : IOstreamOption::NO_APPEND)
+            )
+        );
+
+        if (!append)
+        {
+            motionFilePtr()
+                << "# Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho "
+                << "Umean_x Umean_y Umean_z Urel_x Urel_y Urel_z "
+                << "Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z "
+                << "Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z "
+                << "Fnet_x Fnet_y Fnet_z" << endl;
+        }
     }
 
     OFstream& motionFile = motionFilePtr();

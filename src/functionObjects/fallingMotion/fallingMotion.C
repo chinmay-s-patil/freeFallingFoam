@@ -38,17 +38,28 @@ void Foam::functionObjects::fallingMotion::openFile()
         fileName outputDir = time_.path()/"postProcessing"/"fallingMotion";
         mkDir(outputDir);
 
+        const fileName motionPath = outputDir/"motion.dat";
+        const bool append = (time_.timeIndex() > time_.startTimeIndex()) || (isFile(motionPath) && time_.value() > 0);
+
         motionFilePtr_.reset
         (
-            new OFstream(outputDir/"motion.dat")
+            new OFstream
+            (
+                motionPath,
+                IOstreamOption(),
+                (append ? IOstreamOption::APPEND : IOstreamOption::NO_APPEND)
+            )
         );
 
-        motionFilePtr_()
-            << "# Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho "
-            << "Umean_x Umean_y Umean_z Urel_x Urel_y Urel_z "
-            << "Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z "
-            << "Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z "
-            << "Fnet_x Fnet_y Fnet_z" << endl;
+        if (!append)
+        {
+            motionFilePtr_()
+                << "# Time Altitude Vx Vy Vz Ax Ay Az g_x g_y g_z rho "
+                << "Umean_x Umean_y Umean_z Urel_x Urel_y Urel_z "
+                << "Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z "
+                << "Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z "
+                << "Fnet_x Fnet_y Fnet_z" << endl;
+        }
     }
 }
 

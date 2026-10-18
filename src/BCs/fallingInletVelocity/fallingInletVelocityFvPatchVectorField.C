@@ -45,10 +45,28 @@ void fallingInletVelocityFvPatchVectorField::readParams
     if (dict.found("u0") || dict.found("acceleration"))
     {
         // Parameters supplied inline in the patch entry — take them directly.
+        // NOTE: Inline parameters operate in prescribed-motion mode, bypassing
+        // dynamic aero-force coupling. To use dynamic solver coupling, omit u0
+        // and acceleration from 0/U and configure them in constant/fallingFrameDict.
         overrideParams_ = true;
         u0_            = dict.getOrDefault<vector>("u0",           vector::zero);
         acceleration_  = dict.getOrDefault<vector>("acceleration", vector::zero);
-        maxFrameSpeed_ = dict.getOrDefault<scalar>("maxFrameSpeed", GREAT);
+
+        Info<< "  [fallingInletVelocity] Patch '" << this->patch().name()
+            << "': using inline parameters (prescribed-motion mode)." << nl;
+
+        if (dict.found("maxFrameSpeed"))
+        {
+            maxFrameSpeed_ = dict.get<scalar>("maxFrameSpeed");
+        }
+        else if (dict.found("terminalVelocity"))
+        {
+            maxFrameSpeed_ = dict.get<scalar>("terminalVelocity");
+        }
+        else
+        {
+            maxFrameSpeed_ = GREAT;
+        }
     }
     else
     {
@@ -147,9 +165,16 @@ fallingInletVelocityFvPatchVectorField
     valueFraction() = 1.0;          // start fully Dirichlet
     refValue()      = inletVelocity(0.0);
 
-    // Do NOT call the mixedFvPatchVectorField dict constructor — we handle
-    // the "value" entry ourselves to avoid requiring it in 0/U.
-    fvPatchVectorField::operator=(refValue());
+    // Initialise patch field value: honour user-specified "value" if present in 0/U,
+    // otherwise default to refValue()
+    if (dict.found("value"))
+    {
+        fvPatchField<vector>::operator=(vectorField("value", dict, p.size()));
+    }
+    else
+    {
+        fvPatchVectorField::operator=(refValue());
+    }
 }
 
 
@@ -251,7 +276,6 @@ void fallingInletVelocityFvPatchVectorField::updateCoeffs()
     }
 
     const vectorField& Sf = patch().Sf();
-    const vectorField Uinternal(patchInternalField());
 
     refGrad() = vector::zero;
 

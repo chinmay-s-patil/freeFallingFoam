@@ -1,5 +1,19 @@
 // ============================================================
-//  predictFallingFrameMotion.H — 2nd-order Heun Predictor Step
+//  predictFallingFrameMotion.H — Predictor-Corrector Predictor Step
+//
+//  Semi-implicit predictor-corrector scheme:
+//    Predict:  V_pred   = V^n + a^n * dt  (using old acceleration)
+//    Solve:    PIMPLE / density equations with V_pred BCs
+//    Correct:  a^{n+1}  from converged aero forces
+//              V^{n+1}  = V^n + 0.5*(a^n + a^{n+1})*dt (trapezoidal)
+//
+//  This is O(dt²) accurate. It is NOT a full explicit Heun scheme
+//  because the predictor does not recompute aerodynamic forces — it
+//  reuses a^n from the previous timestep's corrector.
+//
+//  NOTE: Variables declared here (dt, gDir, V_up_prev, etc.) remain
+//  in scope for correctFallingFrameMotion.H because both headers
+//  are #include'd at the same brace level inside the time loop body.
 // ============================================================
 
 // Store state at beginning of timestep (time n)

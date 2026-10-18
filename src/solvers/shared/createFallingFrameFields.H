@@ -68,6 +68,13 @@ const scalar rhoRef
     fallingFrameDict.getOrDefault<scalar>("rhoInf", 1.204)
 );
 
+if (rhoRef <= 0.0)
+{
+    FatalErrorInFunction
+        << "rhoInf must be strictly positive (> 0), but found: "
+        << rhoRef << exit(FatalError);
+}
+
 const word densityModel
 (
     fallingFrameDict.getOrDefault<word>("densityModel", "rhoInf")
@@ -111,6 +118,14 @@ const scalar terminalAccelerationTolerance
 (
     fallingFrameDict.getOrDefault<scalar>("terminalAccelerationTolerance", 1e-3)
 );
+
+if (terminalVelocityTolerance <= 0.0 || terminalAccelerationTolerance <= 0.0)
+{
+    FatalErrorInFunction
+        << "terminalVelocityTolerance and terminalAccelerationTolerance must be positive (> 0), but found: "
+        << terminalVelocityTolerance << ", " << terminalAccelerationTolerance
+        << exit(FatalError);
+}
 
 // Motion degrees of freedom mask (vector): 1 = free, 0 = constrained
 const vector freedomMask
@@ -209,13 +224,42 @@ if (densityModel == "altitudeBased")
 
 #if defined(FF_PIMPLE_COMPRESSIBLE)
 const word machRegime(fallingFrameDict.getOrDefault<word>("machRegime", "subsonic"));
-const scalar machRegimeSwitchCutOff(fallingFrameDict.getOrDefault<scalar>("machCutOff", 0.7));
-const word machRegimeAction(fallingFrameDict.getOrDefault<word>("machAction", "switch"));
+const scalar machRegimeSwitchCutOff
+(
+    fallingFrameDict.found("machCutOff")
+  ? fallingFrameDict.get<scalar>("machCutOff")
+  : fallingFrameDict.getOrDefault<scalar>("machRegimeSwitchCutOff", 0.7)
+);
+const word machRegimeAction
+(
+    fallingFrameDict.found("machAction")
+  ? fallingFrameDict.get<word>("machAction")
+  : fallingFrameDict.getOrDefault<word>("machRegimeAction", "switch")
+);
 bool machRegimeSwitched = false;
 
 Info<< "    machRegime     = " << machRegime << nl
     << "    machCutOff     = " << machRegimeSwitchCutOff << nl
     << "    machAction     = " << machRegimeAction << nl;
+
+if (machRegime != "subsonic" && machRegime != "transonic" &&
+    machRegime != "auto" && machRegime != "autoSwitch" &&
+    machRegime != "on" && machRegime != "off")
+{
+    FatalErrorInFunction
+        << "Unknown machRegime: '" << machRegime
+        << "'. Valid options are: subsonic, transonic, auto, autoSwitch, on, off."
+        << exit(FatalError);
+}
+
+if ((machRegime == "auto" || machRegime == "autoSwitch") &&
+    machRegimeAction != "switch" && machRegimeAction != "stop")
+{
+    FatalErrorInFunction
+        << "Unknown machAction: '" << machRegimeAction
+        << "'. Valid options are: switch, stop."
+        << exit(FatalError);
+}
 
 if (mesh.foundObject<IOdictionary>("fvSolution"))
 {
@@ -228,9 +272,21 @@ if (mesh.foundObject<IOdictionary>("fvSolution"))
             pimpleDict.set("transonic", true);
             machRegimeSwitched = true;
         }
-        else if (machRegime == "subsonic" || machRegime == "off" || machRegime == "auto")
+        else if (machRegime == "subsonic" || machRegime == "off")
         {
             pimpleDict.set("transonic", false);
+        }
+        else if (machRegime == "auto" || machRegime == "autoSwitch")
+        {
+            // On restart, preserve existing transonic setting from fvSolution
+            if (runTime.timeIndex() > runTime.startTimeIndex() || runTime.value() > 0)
+            {
+                machRegimeSwitched = pimpleDict.getOrDefault<bool>("transonic", false);
+            }
+            else
+            {
+                pimpleDict.set("transonic", false);
+            }
         }
     }
 }

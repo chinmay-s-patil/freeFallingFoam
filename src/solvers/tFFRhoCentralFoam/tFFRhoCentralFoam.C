@@ -229,8 +229,6 @@ int main(int argc, char *argv[])
                 fvm::ddt(rho, U) - fvc::ddt(rho, U)
               - fvm::laplacian(muEff, U)
               - fvc::div(tauMC)
-             ==
-                rho*fallingFrameForce
             );
             rhoU = rho*U;
         }

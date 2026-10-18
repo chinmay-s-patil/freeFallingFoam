@@ -32,7 +32,15 @@ Foam::meanFlowModels::powerLaw::powerLaw(const dictionary& dict)
     referenceHeight_(dict.getOrDefault<scalar>("referenceHeight", 10.0)),
     referenceVelocity_(dict.getOrDefault<vector>("referenceVelocity", vector::zero)),
     exponent_(dict.getOrDefault<scalar>("exponent", 0.14))
-{}
+{
+    if (referenceHeight_ <= groundHeight_)
+    {
+        FatalErrorInFunction
+            << "referenceHeight (" << referenceHeight_
+            << " m) must be strictly greater than groundHeight (" << groundHeight_
+            << " m) in powerLaw meanFlow model!" << exit(FatalError);
+    }
+}
 
 Foam::vector Foam::meanFlowModels::powerLaw::velocity(const scalar altitude) const
 {
