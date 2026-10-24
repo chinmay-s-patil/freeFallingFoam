@@ -10,7 +10,9 @@ EXE_INC = \
     -I$(LIB_SRC)/transportModels/incompressible/singlePhaseTransportModel \
     -I$(LIB_SRC)/dynamicMesh/lnInclude \
     -I$(LIB_SRC)/dynamicFvMesh/lnInclude \
-    -I../../models/meanFlowModel
+    -I../../models/meanFlowModel \
+    -I../../models/externalForces \
+    -I../../models/lnInclude
 
 EXE_LIBS = \
     -lfiniteVolume \

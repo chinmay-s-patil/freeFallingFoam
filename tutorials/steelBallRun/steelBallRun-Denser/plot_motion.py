@@ -36,35 +36,69 @@ def parse_motion_dat(filepath):
 	if not lines:
 		raise ValueError("motion.dat file is empty.")
 
-	data_lines_27 = []
-	data_lines_33 = []
+	data_lines = []
+	detected_cols = 0
 	for line in lines:
 		if line.startswith("#"):
 			continue
 		parts = line.split()
-		if len(parts) == 33:
+		if len(parts) in (38, 35, 33, 27):
 			try:
-				data_lines_33.append([float(val) for val in parts])
-			except ValueError:
-				continue
-		elif len(parts) == 27:
-			try:
-				data_lines_27.append([float(val) for val in parts])
+				row = [float(val) for val in parts]
+				if len(row) == 35:
+					row.extend([0.0, 0.0, 0.0])
+				data_lines.append(row)
+				if detected_cols == 0:
+					detected_cols = len(row)
 			except ValueError:
 				continue
 
-	# Prefer 33-column format if present, otherwise fallback to 27
-	if data_lines_33:
-		data = np.array(data_lines_33)
-		ncols = 33
-	elif data_lines_27:
-		data = np.array(data_lines_27)
-		ncols = 27
-	else:
+	if not data_lines:
 		raise ValueError("No valid numeric data lines found in motion.dat.")
 
+	data = np.array(data_lines)
+	ncols = detected_cols
+
 	# Column mapping based on fallingMotion.C / correctFallingFrameMotion.H
-	if ncols == 33:
+	if ncols == 38:
+		cols = {
+			'time': data[:, 0],
+			'alt': data[:, 1],
+			'Vx': data[:, 2], 'Vy': data[:, 3], 'Vz': data[:, 4],
+			'Ax': data[:, 5], 'Ay': data[:, 6], 'Az': data[:, 7],
+			'gx': data[:, 8], 'gy': data[:, 9], 'gz': data[:, 10],
+			'rho': data[:, 11],
+			'a_sound': data[:, 12],
+			'Mach': data[:, 13],
+			'Umean_x': data[:, 14], 'Umean_y': data[:, 15], 'Umean_z': data[:, 16],
+			'Urel_x': data[:, 17], 'Urel_y': data[:, 18], 'Urel_z': data[:, 19],
+			'Fpress_x': data[:, 20], 'Fpress_y': data[:, 21], 'Fpress_z': data[:, 22],
+			'Fvisc_x': data[:, 23], 'Fvisc_y': data[:, 24], 'Fvisc_z': data[:, 25],
+			'Faero_x': data[:, 26], 'Faero_y': data[:, 27], 'Faero_z': data[:, 28],
+			'Fgrav_x': data[:, 29], 'Fgrav_y': data[:, 30], 'Fgrav_z': data[:, 31],
+			'Fnet_x': data[:, 32], 'Fnet_y': data[:, 33], 'Fnet_z': data[:, 34],
+			'Fext_x': data[:, 35], 'Fext_y': data[:, 36], 'Fext_z': data[:, 37],
+		}
+		cols['Fext_mag'] = np.sqrt(cols['Fext_x']**2 + cols['Fext_y']**2 + cols['Fext_z']**2)
+	elif ncols == 35:
+		cols = {
+			'time': data[:, 0],
+			'alt': data[:, 1],
+			'Vx': data[:, 2], 'Vy': data[:, 3], 'Vz': data[:, 4],
+			'Ax': data[:, 5], 'Ay': data[:, 6], 'Az': data[:, 7],
+			'gx': data[:, 8], 'gy': data[:, 9], 'gz': data[:, 10],
+			'rho': data[:, 11],
+			'a_sound': data[:, 12],
+			'Mach': data[:, 13],
+			'Umean_x': data[:, 14], 'Umean_y': data[:, 15], 'Umean_z': data[:, 16],
+			'Urel_x': data[:, 17], 'Urel_y': data[:, 18], 'Urel_z': data[:, 19],
+			'Fpress_x': data[:, 20], 'Fpress_y': data[:, 21], 'Fpress_z': data[:, 22],
+			'Fvisc_x': data[:, 23], 'Fvisc_y': data[:, 24], 'Fvisc_z': data[:, 25],
+			'Faero_x': data[:, 26], 'Faero_y': data[:, 27], 'Faero_z': data[:, 28],
+			'Fgrav_x': data[:, 29], 'Fgrav_y': data[:, 30], 'Fgrav_z': data[:, 31],
+			'Fnet_x': data[:, 32], 'Fnet_y': data[:, 33], 'Fnet_z': data[:, 34],
+		}
+	elif ncols == 33:
 		cols = {
 			'time': data[:, 0],
 			'alt': data[:, 1],

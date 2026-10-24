@@ -4,6 +4,7 @@
 
 #include "uniformDimensionedFields.H"
 #include "meanFlowModel.H"
+#include "externalForces.H"
 
 Info<< "Reading fallingFrameDict\n" << endl;
 
@@ -46,14 +47,6 @@ if (freedomMask.x() < 0.0 || freedomMask.x() > 1.0 ||
         << ". Acceleration will be scaled accordingly." << nl;
 }
 
-// Initial kinematic frame acceleration (defaults to gravity masked by freedom)
-const vector initialFrameAcc
-(
-    fallingFrameDict.found("initialAcceleration")
-  ? cmptMultiply(fallingFrameDict.get<vector>("initialAcceleration"), freedomMask)
-  : cmptMultiply(initialGravity, freedomMask)
-);
-
 const scalar bodyMass
 (
     fallingFrameDict.get<scalar>("mass")
@@ -65,6 +58,18 @@ if (bodyMass <= 0.0)
         << "bodyMass must be strictly positive (> 0), but found: "
         << bodyMass << exit(FatalError);
 }
+
+// Construct external forces model
+externalForces extForces(fallingFrameDict);
+const bodyLoad initialExtLoad = extForces.evaluate(runTime.value(), mesh);
+
+// Initial kinematic frame acceleration (defaults to (gravity + extForce/mass) masked by freedom)
+const vector initialFrameAcc
+(
+    fallingFrameDict.found("initialAcceleration")
+  ? cmptMultiply(fallingFrameDict.get<vector>("initialAcceleration"), freedomMask)
+  : cmptMultiply(initialGravity + initialExtLoad.force / bodyMass, freedomMask)
+);
 
 const wordList patchNames
 (
@@ -229,7 +234,8 @@ Info<< "  Falling body properties:" << nl
     << "    groundAltitude = " << groundAltitude << " m" << nl
     << "    termVelSamples = " << terminalVelocitySamples << nl
     << "    termVelWrite   = " << (terminalVelocityWrite ? "on" : "off") << nl
-    << "    termVelStop    = " << (terminalVelocityStop ? "on" : "off") << nl;
+    << "    termVelStop    = " << (terminalVelocityStop ? "on" : "off") << nl
+    << "    externalForces = " << (extForces.enabled() ? "on" : "off") << nl;
 
 #if defined(FF_COMPRESSIBLE)
 if (densityModel == "altitudeBased")
@@ -441,6 +447,34 @@ uniformDimensionedVectorField gravityForce
         IOobject::AUTO_WRITE
     ),
     dimensionedVector("gravityForce", dimForce, bodyMass * initialGravity)
+);
+
+uniformDimensionedVectorField externalForce
+(
+    IOobject
+    (
+        "externalForce",
+        runTime.timeName(),
+        "uniform",
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    dimensionedVector("externalForce", dimForce, initialExtLoad.force)
+);
+
+uniformDimensionedVectorField externalMoment
+(
+    IOobject
+    (
+        "externalMoment",
+        runTime.timeName(),
+        "uniform",
+        mesh,
+        IOobject::READ_IF_PRESENT,
+        IOobject::AUTO_WRITE
+    ),
+    dimensionedVector("externalMoment", dimForce*dimLength, initialExtLoad.moment)
 );
 
 uniformDimensionedVectorField netForce

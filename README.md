@@ -157,6 +157,61 @@ terminalVelocity    85;
 // Output logging to postProcessing/fallingMotion/motion.dat (default: true)
 // Note: Set to false if you are using the fallingMotion function object
 writeMotionLog      true;
+
+// External body forces & propulsion (optional)
+externalForces
+{
+    enabled         yes;
+
+    forces
+    {
+        // Global-frame constant load
+        constantLoad
+        {
+            type        constantForce;
+            active      yes;
+            force       ( 0 0 -50 );       // [N]
+        }
+
+        // Global-frame rocket booster
+        booster
+        {
+            type        thrust;
+            active      yes;
+            direction   ( 0 1 0 );         // Global unit vector
+            magnitude   1200;              // [N]
+            startTime   0.0;               // [s]
+            endTime     4.0;               // [s]
+        }
+
+        // Prescribed time-varying force profile
+        prescribedLoad
+        {
+            type        tabulatedForce;
+            active      no;
+            interpolation  linear;
+            outOfRange    zero;            // zero or hold
+            table
+            (
+                (0.0  (0   0 0))
+                (0.5  (0 200 0))
+                (1.0  (0   0 0))
+            );
+        }
+
+        // Body-fixed rotating thrust for 6DoF bodies
+        rocketThrust
+        {
+            type              6DoFThrust;
+            active            yes;
+            direction         ( 1 0 0 );    // Longitudinal axis in body frame
+            magnitude         1200;         // [N]
+            startTime         0.0;          // [s]
+            endTime           4.0;          // [s]
+            applicationPoint  (-0.45 0 0);  // Relative to CM in body frame [m]
+        }
+    }
+}
 ```
 
 In `0/U`, configure the `fallingInletVelocity` boundary condition on far-field patches:

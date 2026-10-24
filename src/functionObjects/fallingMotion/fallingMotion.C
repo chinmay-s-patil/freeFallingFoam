@@ -58,7 +58,7 @@ void Foam::functionObjects::fallingMotion::openFile()
                 << "Umean_x Umean_y Umean_z Urel_x Urel_y Urel_z "
                 << "Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z "
                 << "Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z "
-                << "Fnet_x Fnet_y Fnet_z" << endl;
+                << "Fnet_x Fnet_y Fnet_z Fext_x Fext_y Fext_z" << endl;
         }
     }
 }
@@ -123,6 +123,11 @@ void Foam::functionObjects::fallingMotion::printConsole(const fvMesh& mesh)
     {
         Info<< "  Fnet = " << Fnet << " N" << endl;
     }
+    if (printExternalForce_ && mesh.foundObject<uniformDimensionedVectorField>("externalForce"))
+    {
+        const vector& Fext = mesh.lookupObject<uniformDimensionedVectorField>("externalForce").value();
+        Info<< "  Fexternal = " << Fext << " N" << endl;
+    }
     if (printSpeedOfSound_ && mesh.foundObject<uniformDimensionedScalarField>("speedOfSound"))
     {
         Info<< "  Speed of Sound = " << mesh.lookupObject<uniformDimensionedScalarField>("speedOfSound").value() << " m/s" << endl;
@@ -179,6 +184,9 @@ void Foam::functionObjects::fallingMotion::writeLog(const fvMesh& mesh)
     const vector& Faero  = mesh.lookupObject<uniformDimensionedVectorField>("aeroForce").value();
     const vector& Fgrav  = mesh.lookupObject<uniformDimensionedVectorField>("gravityForce").value();
     const vector& Fnet   = mesh.lookupObject<uniformDimensionedVectorField>("netForce").value();
+    const vector Fext    = mesh.foundObject<uniformDimensionedVectorField>("externalForce")
+                         ? mesh.lookupObject<uniformDimensionedVectorField>("externalForce").value()
+                         : vector::zero;
 
     motionFilePtr_()
         << time_.timeName() << " "
@@ -195,7 +203,8 @@ void Foam::functionObjects::fallingMotion::writeLog(const fvMesh& mesh)
         << Fvisc.x() << " " << Fvisc.y() << " " << Fvisc.z() << " "
         << Faero.x() << " " << Faero.y() << " " << Faero.z() << " "
         << Fgrav.x() << " " << Fgrav.y() << " " << Fgrav.z() << " "
-        << Fnet.x() << " " << Fnet.y() << " " << Fnet.z() << endl;
+        << Fnet.x() << " " << Fnet.y() << " " << Fnet.z() << " "
+        << Fext.x() << " " << Fext.y() << " " << Fext.z() << endl;
 }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -220,6 +229,7 @@ Foam::functionObjects::fallingMotion::fallingMotion
     printAeroForce_(true),
     printGravityForce_(true),
     printNetForce_(true),
+    printExternalForce_(true),
     printMeanFlow_(true),
     printRelativeVel_(true),
     printSpeedOfSound_(true),
@@ -248,6 +258,7 @@ bool Foam::functionObjects::fallingMotion::read(const dictionary& dict)
         printAeroForce_         = printDict.getOrDefault<bool>("aeroForce", true);
         printGravityForce_      = printDict.getOrDefault<bool>("gravityForce", true);
         printNetForce_          = printDict.getOrDefault<bool>("netForce", true);
+        printExternalForce_     = printDict.getOrDefault<bool>("externalForce", true);
         printMeanFlow_          = printDict.getOrDefault<bool>("meanFlow", true);
         printRelativeVel_       = printDict.getOrDefault<bool>("relativeVel", true);
         printSpeedOfSound_      = printDict.getOrDefault<bool>("speedOfSound", true);

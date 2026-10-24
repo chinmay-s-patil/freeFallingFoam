@@ -1,0 +1,28 @@
+EXE_INC = \
+    -DFF_INCOMPRESSIBLE \
+    -I../shared \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude \
+    -I$(LIB_SRC)/sampling/lnInclude \
+    -I$(LIB_SRC)/TurbulenceModels/turbulenceModels/lnInclude \
+    -I$(LIB_SRC)/TurbulenceModels/incompressible/lnInclude \
+    -I$(LIB_SRC)/transportModels \
+    -I$(LIB_SRC)/transportModels/incompressible/singlePhaseTransportModel \
+    -I$(LIB_SRC)/dynamicMesh/lnInclude \
+    -I$(LIB_SRC)/dynamicFvMesh/lnInclude \
+    -I../../models/meanFlowModel \
+    -I../../models/externalForces \
+    -I../../models/lnInclude
+
+EXE_LIBS = \
+    -lfiniteVolume \
+    -lfvOptions \
+    -lmeshTools \
+    -lsampling \
+    -lturbulenceModels \
+    -lincompressibleTurbulenceModels \
+    -lincompressibleTransportModels \
+    -ldynamicMesh \
+    -ldynamicFvMesh \
+    -L$(FOAM_USER_LIBBIN) \
+    -lfreeFallingModels

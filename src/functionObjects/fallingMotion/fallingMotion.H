@@ -65,6 +65,7 @@ class fallingMotion
         bool printAeroForce_;
         bool printGravityForce_;
         bool printNetForce_;
+        bool printExternalForce_;
         bool printMeanFlow_;
         bool printRelativeVel_;
         bool printSpeedOfSound_;

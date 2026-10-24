@@ -1,9 +1,16 @@
 EXE_INC = \
     -I$(LIB_SRC)/OpenFOAM/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
     -ImeanFlowModel \
     -ImeanFlowModel/constant \
     -ImeanFlowModel/powerLaw \
-    -ImeanFlowModel/tabulated
+    -ImeanFlowModel/tabulated \
+    -IexternalForces \
+    -IexternalForces/constant \
+    -IexternalForces/tabulated \
+    -IexternalForces/thrust \
+    -IexternalForces/sixDoFThrust
 
 LIB_LIBS = \
-    -lOpenFOAM
+    -lOpenFOAM \
+    -lfiniteVolume

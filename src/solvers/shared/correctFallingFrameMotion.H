@@ -74,8 +74,12 @@ aeroForce.value()     = fPress + fVisc;
 // ------------------------------------------------------------
 //  2. Force balance and new acceleration at timestep n+1
 // ------------------------------------------------------------
+const bodyLoad extLoad = extForces.evaluate(runTime.value(), mesh);
+externalForce.value()  = extLoad.force;
+externalMoment.value() = extLoad.moment;
+
 gravityForce.value() = bodyMass * gravity.value();
-netForce.value()     = gravityForce.value() + aeroForce.value();
+netForce.value()     = gravityForce.value() + aeroForce.value() + externalForce.value();
 
 vector a_new = netForce.value() / bodyMass;
 a_new.x() *= freedomMask.x();
@@ -361,6 +365,13 @@ if (fallingFrameDict.found("print"))
     {
         Info<< "Faero = " << (aeroForce.value().y() >= 0 ? "+" : "") << aeroForce.value().y() << " N" << endl;
     }
+    if (printDict.getOrDefault<bool>("externalForce", true))
+    {
+        if (extForces.enabled() || printDict.found("externalForce"))
+        {
+            Info<< "Fexternal = " << externalForce.value() << " N" << endl;
+        }
+    }
     if (printDict.getOrDefault<bool>("netForce", true))
     {
         Info<< "Fnet = " << netForce.value() << " N" << endl;
@@ -397,7 +408,7 @@ forAll(fol, foi)
 
 if (Pstream::master() && !foMotionActive && fallingFrameDict.getOrDefault<bool>("writeMotionLog", true))
 {
-    fileName motionDir = runTime.path()/"postProcessing"/"fallingMotion";
+    fileName motionDir = runTime.globalPath()/"postProcessing"/"fallingMotion";
     mkDir(motionDir);
 
     static autoPtr<OFstream> motionFilePtr;
@@ -423,7 +434,7 @@ if (Pstream::master() && !foMotionActive && fallingFrameDict.getOrDefault<bool>(
                 << "Umean_x Umean_y Umean_z Urel_x Urel_y Urel_z "
                 << "Fpress_x Fpress_y Fpress_z Fvisc_x Fvisc_y Fvisc_z "
                 << "Faero_x Faero_y Faero_z Fgrav_x Fgrav_y Fgrav_z "
-                << "Fnet_x Fnet_y Fnet_z" << endl;
+                << "Fnet_x Fnet_y Fnet_z Fext_x Fext_y Fext_z" << endl;
         }
     }
 
@@ -442,5 +453,6 @@ if (Pstream::master() && !foMotionActive && fallingFrameDict.getOrDefault<bool>(
                << viscousForce.value().x() << " " << viscousForce.value().y() << " " << viscousForce.value().z() << " "
                << aeroForce.value().x() << " " << aeroForce.value().y() << " " << aeroForce.value().z() << " "
                << gravityForce.value().x() << " " << gravityForce.value().y() << " " << gravityForce.value().z() << " "
-               << netForce.value().x() << " " << netForce.value().y() << " " << netForce.value().z() << endl;
+               << netForce.value().x() << " " << netForce.value().y() << " " << netForce.value().z() << " "
+               << externalForce.value().x() << " " << externalForce.value().y() << " " << externalForce.value().z() << endl;
 }

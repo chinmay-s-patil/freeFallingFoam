@@ -35,10 +35,17 @@ echo ""
 echo "--- Building Function Objects ---"
 wmake "$PWD/functionObjects/fallingMotion"
 
-# ---- 4. Dynamic Solvers ------------------------------------
+# ---- 4. Motion Solvers -------------------------------------
+echo ""
+echo "--- Building Motion Solvers ---"
+wmake "$PWD/motion/sixDoFRotatingMotion"
+wmake "$PWD/motion/tFFRotationalMotion"
+
+# ---- 5. Dynamic Solvers ------------------------------------
 echo ""
 echo "--- Building dynamic solvers ---"
 wmake "$PWD/solvers/tFFPimpleFoam"
+wmake "$PWD/solvers/tFF6DoFPimpleFoam"
 wmake "$PWD/solvers/tFFRhoPimpleFoam"
 wmake "$PWD/solvers/tFFRhoCentralFoam"
 

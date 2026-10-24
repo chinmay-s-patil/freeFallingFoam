@@ -32,6 +32,7 @@ Description
 #include "localEulerDdtScheme.H"
 #include "fvcSmooth.H"
 #include "meanFlowModel.H"
+#include "externalForces.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

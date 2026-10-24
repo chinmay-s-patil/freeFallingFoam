@@ -3,4 +3,11 @@ meanFlowModel/constant/constantMeanFlowModel.C
 meanFlowModel/powerLaw/powerLawMeanFlowModel.C
 meanFlowModel/tabulated/tabulatedMeanFlowModel.C
 
+externalForces/externalForceModel.C
+externalForces/externalForces.C
+externalForces/constant/constantForceModel.C
+externalForces/tabulated/tabulatedForceModel.C
+externalForces/thrust/thrustForceModel.C
+externalForces/sixDoFThrust/sixDoFThrustForceModel.C
+
 LIB = $(FOAM_USER_LIBBIN)/libfreeFallingModels
