@@ -52,8 +52,7 @@ if (mag(rotorDamping) > 0.0)
 // Solve Euler's rotational equations via RK4
 auto domega = [&](const vector& w) -> vector
 {
-    const vector Iw = cmptMultiply(Ib, w);
-    return cmptDivide(Mb - (w ^ Iw), Ib);
+    return JbInv & (Mb - (w ^ (Jb & w)));
 };
 
 const scalar dtCorrect = runTime.deltaTValue();

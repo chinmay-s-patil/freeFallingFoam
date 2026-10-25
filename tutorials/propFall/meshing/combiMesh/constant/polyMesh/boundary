@@ -1,0 +1,75 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+6
+(
+    inlet-onwind
+    {
+        type            patch;
+        inGroups        1(patch);
+        nFaces          964;
+        startFace       797294;
+    }
+    open
+    {
+        type            patch;
+        inGroups        1(patch);
+        nFaces          3916;
+        startFace       798258;
+    }
+    inlet-crosswind
+    {
+        type            patch;
+        inGroups        1(patch);
+        nFaces          1144;
+        startFace       802174;
+    }
+    propeller
+    {
+        type            wall;
+        inGroups        1(wall);
+        nFaces          71247;
+        startFace       803318;
+    }
+    masterAMI
+    {
+        type            cyclicAMI;
+        inGroups        1(cyclicAMI);
+        nFaces          2264;
+        startFace       874565;
+        matchTolerance  0.0001;
+        transform       noOrdering;
+        neighbourPatch  slaveAMI;
+        AMIMethod       faceAreaWeightAMI;
+        restartUncoveredSourceFace 1;
+    }
+    slaveAMI
+    {
+        type            cyclicAMI;
+        inGroups        1(cyclicAMI);
+        nFaces          4632;
+        startFace       876829;
+        matchTolerance  0.0001;
+        transform       noOrdering;
+        neighbourPatch  masterAMI;
+        AMIMethod       faceAreaWeightAMI;
+        restartUncoveredSourceFace 1;
+    }
+)
+
+// ************************************************************************* //

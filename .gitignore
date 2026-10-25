@@ -138,9 +138,18 @@ log*
 
 doc
 
-tutorials/propFall/
+tutorials/propFall/cases/propTumble/extracted_frames
+
+/**/postProcessing*
+
+!/**/postProcessing
+
+# tutorials/propFall/
+
+/**/FreeCAD/
 
 # ------------------------------------------------------------
 #  Random File Show
 # ------------------------------------------------------------
 !plot_motion.py
+!animate_motion.py

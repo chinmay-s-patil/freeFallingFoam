@@ -1,0 +1,17 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1
+
+# Check parallel execution
+NPROC=$(grep -oP 'numberOfSubdomains\s+\K[0-9]+' system/decomposeParDict 2>/dev/null || echo 1)
+
+if [ "$NPROC" -gt 1 ]; then
+    echo "Decomposing case across $NPROC cores..."
+    decomposePar -force > log.decomposePar 2>&1
+    echo "Running pimpleFoam in parallel on $NPROC cores..."
+    mpirun -np "$NPROC" pimpleFoam -parallel > log.pimpleFoam 2>&1
+    echo "Reconstructing case..."
+    reconstructPar > log.reconstructPar 2>&1
+else
+    echo "Running pimpleFoam in serial..."
+    pimpleFoam > log.pimpleFoam 2>&1
+fi

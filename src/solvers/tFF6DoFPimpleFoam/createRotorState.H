@@ -33,6 +33,31 @@ if (Ib.x() <= 0.0 || Ib.y() <= 0.0 || Ib.z() <= 0.0)
         << Ib << exit(FatalError);
 }
 
+// Body inertia tensor in solver/mesh frame
+tensor JbCalc(Ib.x(), 0, 0,  0, Ib.y(), 0,  0, 0, Ib.z());
+
+if (rotorDict.found("meshTiltAngleDeg"))
+{
+    const scalar tiltAngleDeg = rotorDict.get<scalar>("meshTiltAngleDeg");
+    const vector tiltAxis = rotorDict.getOrDefault<vector>("meshTiltAxis", vector(1, 0, 0));
+    const tensor R0 = quaternion(normalised(tiltAxis), tiltAngleDeg * constant::mathematical::pi / 180.0).R();
+    JbCalc = R0 & JbCalc & R0.T();
+    Info<< "  Mesh pre-tilt angle: " << tiltAngleDeg << " deg about axis " << tiltAxis << endl;
+}
+else if (rotorDict.found("meshTiltOrientation"))
+{
+    const tensor R0(rotorDict.get<tensor>("meshTiltOrientation"));
+    JbCalc = R0 & JbCalc & R0.T();
+}
+else if (rotorDict.found("inertiaTensor"))
+{
+    JbCalc = rotorDict.get<tensor>("inertiaTensor");
+}
+
+const tensor Jb = JbCalc;
+Info<< "  Body inertia tensor in solver/mesh frame: " << Jb << endl;
+const tensor JbInv = inv(Jb);
+
 const vector rotFreedom
 (
     rotorDict.getOrDefault<vector>("rotationFreedom", vector::one)

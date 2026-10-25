@@ -1,0 +1,30 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      dynamicMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+libs            ("libtFFRotationalMotion.so");
+motionSolverLibs (fvMotionSolvers "libtFFRotationalMotion.so");
+
+dynamicFvMesh   dynamicMotionSolverFvMesh;
+
+motionSolver    solidBody;
+
+cellZone        rotatingZone;
+
+solidBodyMotionFunction tFFRotationalMotion;
+
+origin          (0 0 0);
+
+// ************************************************************************* //

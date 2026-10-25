@@ -1,0 +1,27 @@
+#!/bin/bash
+cd "${0%/*}" || exit 1
+
+echo "Assembling combiMesh from staticMesh and rotatingMesh..."
+
+# 1. Clean previous polyMesh
+rm -rf constant/polyMesh
+
+# 2. Copy base static mesh
+cp -r ../staticMesh/constant/polyMesh constant/
+
+# 3. Merge rotatingMesh into staticMesh
+mergeMeshes . ../rotatingMesh -overwrite
+
+# 4. Create cyclicAMI patches (masterAMI & slaveAMI)
+createPatch -overwrite
+
+# 5. Identify disconnected regions (generates region0 and region1 sets)
+checkMesh > /dev/null 2>&1
+
+# 6. Create cellZones (rotatingZone & staticZone)
+topoSet
+
+# 7. Export surface mesh for FreeCAD / ParaView
+foamToSurface -scale 1000 -tri surfaceMesh.vtk
+
+echo "combiMesh assembly complete."

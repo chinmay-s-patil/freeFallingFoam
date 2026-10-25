@@ -1,0 +1,38 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      dynamicMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dynamicFvMesh   dynamicMotionSolverFvMesh;
+
+motionSolverLibs (fvMotionSolvers "libsixDoFRotatingMotion.so");
+
+motionSolver    solidBody;
+
+cellZone        rotatingZone;
+
+solidBodyMotionFunction  sixDoFRotatingMotion;
+
+origin          (0 0 0);
+axis            (0 1 0);
+patches         (propeller);
+mass            0.012;               // Propeller mass [kg] (~12 grams)
+momentOfInertia 6.5e-5;              // Moment of inertia about spin axis I_yy [kg*m^2]
+omega0          0.0;                 // Initial angular velocity [rad/s]
+damping         0.0;                 // Rotational bearing damping [N*m*s/rad]
+rhoInf          1.225;               // Fluid density [kg/m^3]
+report          on;
+
+
+// ************************************************************************* //

@@ -1,0 +1,129 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2406                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pimpleFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+deltaT          5e-4;
+
+endTime         1.0;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.0025;
+
+purgeWrite      0;
+
+adjustTimeStep  no;
+
+maxCo           5.0;
+
+writeFormat     ascii;
+
+writePrecision  15;
+
+libs
+(
+    // Needed for availability of porous baffle boundary in potentialFoam
+    #include "turbulenceLib"
+);
+
+functions
+{
+    Q1
+    {
+        // Mandatory entries (unmodifiable)
+        type            Q;
+        libs            (fieldFunctionObjects);
+
+        // Optional (inherited) entries
+        field           U;
+        result          Q;
+        enabled         true;
+        log             true;
+        timeStart       0;
+        timeEnd         1;
+        executeControl  timeStep;
+        executeInterval 1;
+
+        // Synchronize writeControl with main simulation output
+        writeControl    writeTime;
+        writeInterval   1; // This is now optional, as writeTime automatically handles it.
+
+        // Omit the region entry to apply to all regions
+    }
+
+    forceCoeffs1
+    {
+        // Mandatory entries
+        type            forceCoeffs;
+        libs            ("libforces.so");
+        patches         (propeller);
+
+
+        // Optional entries
+
+        // Field names
+        p               p;
+        U               U;
+        rho             rhoInf;
+        rhoInf          1.225;
+
+        // Reference pressure [Pa]
+        pRef            0;
+
+        // Include porosity effects?
+        porosity        no;
+
+        // Store and write volume field representations of forces and moments
+        writeFields     yes;
+
+        // Centre of rotation for moment calculations
+        CofR            (0 0 0);
+
+        // Lift direction
+        liftDir         (0 -1 0);
+
+        // Drag direction
+        dragDir         (1 0 0);
+
+        // Freestream velocity magnitude [m/s]
+        magUInf         5;
+
+        // Reference length [m]
+        lRef            0.280;
+
+        // Reference area [m2]
+        Aref            0.0105638;
+
+        // Spatial data binning
+        // - extents given by the bounds of the input geometry
+        //binData
+        //{
+        //    nBin        20;
+        //    direction   (1 0 0);
+        //    cumulative  yes;
+        //}
+    }
+
+}
+
+// ************************************************************************* //

@@ -1,0 +1,71 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     tFF6DoFPimpleFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+deltaT          1e-4;
+
+endTime         20.0;
+
+writeControl    adjustableRunTime;
+
+writeInterval   5e-3;
+
+purgeWrite      0;
+
+adjustTimeStep  yes;
+
+maxCo           1.5;
+
+maxDeltaT       2e-4;
+
+writeFormat     ascii;
+
+writePrecision  12;
+
+runTimeModifiable true;
+
+libs
+(
+    "libtFFRotationalMotion.so"
+    "libfreeFallingModels.so"
+    "libfallingInletVelocity.so"
+    "libturbulenceModels.so"
+);
+
+functions
+{
+    Q1
+    {
+        type            Q;
+        libs            ("libfieldFunctionObjects.so");
+        field           U;
+        result          Q;
+        enabled         true;
+        log             false;
+        executeControl  timeStep;
+        executeInterval 1;
+        writeControl    writeTime;
+    }
+}
+
+// ************************************************************************* //

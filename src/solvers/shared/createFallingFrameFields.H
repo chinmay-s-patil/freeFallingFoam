@@ -34,9 +34,14 @@ const vector initialGravity
 );
 
 // Motion degrees of freedom mask (vector): 1 = free, 0 = constrained
+#if defined(FF_6DOF)
+    const vector defaultFreedom(1, 1, 1);
+#else
+    const vector defaultFreedom(0, 1, 0);
+#endif
 const vector freedomMask
 (
-    fallingFrameDict.getOrDefault<vector>("freedom", vector(0, 1, 0))
+    fallingFrameDict.getOrDefault<vector>("freedom", defaultFreedom)
 );
 
 if (freedomMask.x() < 0.0 || freedomMask.x() > 1.0 ||

@@ -1,0 +1,80 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2412                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      fallingFrameDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Initial fall velocity (vector)
+u0                  ( 0 0 0 );
+
+// Planetary gravity
+acceleration        ( 0 -9.81 0 );
+
+// Patches for aerodynamic force & moment integration
+patches             ( propeller );
+
+// Propeller Mass (11.51 g solid Nylon PA6)
+mass                0.01151;
+
+// Kinematic degrees of freedom for translation (1=free, 0=constrained)
+// (0 1 0) falls purely along vertical Y; set (1 1 1) for wind drift
+freedom             ( 0 1 0 );
+
+// Fluid reference density
+rhoInf              1.225;
+densityModel        rhoInf;
+gravityModel        constant;
+groundInterrupt     off;
+
+// 6DoF Rotational Tumble Dynamics
+rotor
+{
+    hubOrigin         (0 0 0);
+
+    // Principal moments of inertia: I_xx (pitch) I_yy (spin) I_zz (span) [kg*m^2]
+    inertiaPrincipal  (3.919575e-05 3.945599e-05 3.769299e-07);
+
+    // 3D rotational freedom mask: (roll pitch yaw) = 1 means fully free
+    rotationFreedom   (1 1 1);
+
+    // Initial angular velocity [rad/s]
+    initialOmega      (0 0 0);
+
+    // Mesh is already pre-tilted 15 degrees in polyMesh
+    initialAxis       (1 0 0);
+    initialAngleDeg   0.0;
+
+    // Rotational damping [N*m*s/rad] (0 for undamped natural free fall)
+    damping           (0 0 0);
+
+    // Print rotational kinetics to console at each timestep
+    report            true;
+}
+
+// Diagnostic print configuration
+print
+{
+    frameVel        on;
+    frameAcc        on;
+    altitude        off;
+    pressureForce   off;
+    viscousForce    off;
+    aeroForce       on;
+    gravityForce    on;
+    netForce        on;
+    meanFlow        off;
+    relativeVel     off;
+    dynamicPressure off;
+}
+
+// ************************************************************************* //

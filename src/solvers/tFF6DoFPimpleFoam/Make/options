@@ -1,5 +1,6 @@
 EXE_INC = \
     -DFF_INCOMPRESSIBLE \
+    -DFF_6DOF \
     -I../shared \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/meshTools/lnInclude \
